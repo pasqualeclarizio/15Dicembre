@@ -81,7 +81,7 @@ public class Risk extends Thread {
 
         RiskGame.setDefaultMapAndCards(b,c);
     }
-    /*
+    /**
      * these are a three types of Level Array's String
      */
     public static final String[] types = new String[] { "human","ai easy","ai easy","ai easy","ai average","ai average" };

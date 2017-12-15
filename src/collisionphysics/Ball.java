@@ -1,12 +1,12 @@
 package collisionphysics;
 
 public class Ball {
-	/*
-	 * choose attributes
+	/**
+	 * variabiles float for center of ball, x and y
 	 */
-   public float x, y; /* variabiles float Center of ball x and y (Package) */
-   float speedX, speedY; /* variabiles float SpeedX and SpeedY */
-   public float radius; /* variabiles float Radiuos */
+   public float x, y;
+   float speedX, speedY;
+   public float radius;
    
    // For collision detection and response
    // Maintain the response of the earliest collision detected 

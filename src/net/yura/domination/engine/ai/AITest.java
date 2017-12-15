@@ -21,7 +21,7 @@ public class AITest extends AISubmissive {
     }
 
     protected class Attack {
-    	/*
+    	/**
     	 * these are the costant Source and Destination
     	 */
 	public final Country source;

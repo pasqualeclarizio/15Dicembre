@@ -33,7 +33,7 @@ import net.yura.domination.engine.core.Statistic;
 public class AIDomination extends AISubmissive {
 	
 	static final int MAX_AI_TURNS = 300;
-	/*
+	/**
 	 * these are the Costant of Level
 	 */
 	public static final int PLAYER_AI_AVERAGE = 4;

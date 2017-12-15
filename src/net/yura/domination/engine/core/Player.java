@@ -17,7 +17,7 @@ import net.yura.domination.engine.core.StatType;
 public class Player implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	/*
+	/**
 	 * these are a Costant Player
 	 */
 	public final static int PLAYER_HUMAN   = 0;
