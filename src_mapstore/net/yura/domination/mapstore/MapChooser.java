@@ -107,7 +107,6 @@ public class MapChooser implements ActionListener,MapServerListener {
         }
     }
     
-    // provo
     
     public MapChooser(ActionListener al, java.util.List<String> localMaps, Set<String> allowedMaps) {
         this.al = al;
@@ -126,17 +125,13 @@ public class MapChooser implements ActionListener,MapServerListener {
 
             int count = 0;
             if (allowedMaps != null) {
-                for (String localMap : localMaps) {
+                for (String localMap : localMaps)
                     if (allowedMaps.contains(localMap)) {
                         count++;
-                    }
                 }
             }
-
-            // if we have all the allowed maps already, no point showing download UI.
-            if (allowedMaps != null && count == allowedMaps.size()) {
+            if (allowedMaps != null && count == allowedMaps.size())
                 TabBar.setVisible(false);
-            }
             else {
                 java.util.List buttons = TabBar.getComponents();
                 Icon on = new Icon("/ms_bar_on.png");
@@ -161,9 +156,8 @@ public class MapChooser implements ActionListener,MapServerListener {
         }
 
         list = (List)loader.find("ResultList");
-        if (Midlet.getPlatform() == Midlet.PLATFORM_ME4SE) {
+        if (Midlet.getPlatform() == Midlet.PLATFORM_ME4SE)
             list.setDoubleClick(true);
-        }
         MapRenderer r = new MapRenderer(this);
         list.setCellRenderer( r );
         list.setFixedCellHeight( Math.max( XULLoader.adjustSizeToDensity(100) , r.getFixedCellHeight() ) );
