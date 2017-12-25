@@ -126,9 +126,8 @@ public class MapChooser implements ActionListener,MapServerListener {
             int count = 0;
             if (allowedMaps != null) {
                 for (String localMap : localMaps)
-                    if (allowedMaps.contains(localMap)) {
+                    if (allowedMaps.contains(localMap))
                         count++;
-                }
             }
             if (allowedMaps != null && count == allowedMaps.size())
                 TabBar.setVisible(false);
@@ -154,8 +153,17 @@ public class MapChooser implements ActionListener,MapServerListener {
                 }
             }
         }
-
-        list = (List)loader.find("ResultList");
+        
+        applied();
+        
+    }
+    
+    /*
+     * Applied Method applied with a lot of procedures
+     */
+    public void applied()
+    {
+    	list = (List)loader.find("ResultList");
         if (Midlet.getPlatform() == Midlet.PLATFORM_ME4SE)
             list.setDoubleClick(true);
         MapRenderer r = new MapRenderer(this);
@@ -219,18 +227,11 @@ public class MapChooser implements ActionListener,MapServerListener {
             String url = getURL(context, iconUrl);
 
             // if this is a remote file
-            if ( url.indexOf(':')>0 ) {
+            if ( url.indexOf(':')>0 )
                 getRemoteImage(key, url, c);
-            }
             // if this is a locale file
             else {
                 InputStream in=null;
-
-                //Map map = (Map)key;
-                //String mapName = map.getMapUrl();
-                //java.util.Map info = RiskUtil.loadInfo(mapName, false);
-                //String prv = (String)info.get("prv");
-                //if (prv!=null) {
 
                 if (url.startsWith("preview/")) {
                     try {
@@ -240,8 +241,6 @@ public class MapChooser implements ActionListener,MapServerListener {
                         Logger.warn("cant open " + url, ex);
                     }
                 }
-                //if (in==null) {
-                //    String pic = (String)info.get("pic");
 
                 else {
 
@@ -272,9 +271,8 @@ public class MapChooser implements ActionListener,MapServerListener {
                     }
                 }
 
-                if (in!=null) {
+                if (in!=null)
                     gotImg(key, in);
-                }
             }
 
         }
@@ -411,6 +409,8 @@ public class MapChooser implements ActionListener,MapServerListener {
     void makeRequestForMap(String a,String b) {
         client.makeRequestXML( MAP_PAGE , a, b);
     }
+
+    
     
     public void actionPerformed(String actionCommand) {
     	if ("local".equals(actionCommand)) {
@@ -444,8 +444,9 @@ public class MapChooser implements ActionListener,MapServerListener {
         }
     }
     
-    /**
-    public void actionPerformed(String actionCommand) {
+    /** tolto
+    public void actionPerformed1(String actionCommand) {
+    	
         if ("local".equals(actionCommand)) {
             mainCatList(actionCommand);
 
@@ -585,6 +586,8 @@ public class MapChooser implements ActionListener,MapServerListener {
         }
     }
     */
+    
+    
 
     public void click(Map map) {
         String fileUID = getFileUID( map.getMapUrl() );
