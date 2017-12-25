@@ -6,6 +6,9 @@ public class Ball {
 	 */
    public float x, y;
    float speedX, speedY;
+   /**
+    * variabiles type of float of radius
+    */
    public float radius;
    
    // For collision detection and response

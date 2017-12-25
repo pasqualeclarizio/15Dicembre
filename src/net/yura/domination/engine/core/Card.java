@@ -16,8 +16,17 @@ public class Card implements Serializable {
 	 * these are a Costant of different String
 	 */
     public final static String CAVALRY = "Cavalry";
+    /**
+     * A costant about String
+     */
     public final static String INFANTRY = "Infantry";
+    /**
+     * a costant about String
+     */
     public final static String CANNON = "Cannon";
+    /**
+     * A costant about String (Package)
+     */
     public final static String WILDCARD = "wildcard";
 
     private String name;

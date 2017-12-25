@@ -21,9 +21,21 @@ public class Player implements Serializable {
 	 * these are a Costant Player
 	 */
 	public final static int PLAYER_HUMAN   = 0;
+	/**
+	 * costant about base player
+	 */
 	public final static int PLAYER_AI_CRAP = 3;
+	/**
+	 * Costant about Level 1 Player
+	 */
 	public final static int PLAYER_AI_EASY = 1;
+	/**
+	 * costant about player Hard level 2
+	 */
 	public final static int PLAYER_AI_HARD = 2;
+	/**
+	 * costant about Player Average
+	 */
 	public static final int PLAYER_AI_AVERAGE = 4;
 
 
@@ -226,7 +238,10 @@ public class Player implements Serializable {
 	cardsOwned.removeElementAt(0);
         return c;
     }
-
+    
+    /**
+     * Costant NOAFORCARD
+     */
     public static final int noaFORcard = 2;
 
     /**

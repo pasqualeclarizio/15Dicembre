@@ -32,16 +32,33 @@ public class RiskUtil {
 	 * these are a Costant of Success and Error
 	 */
         public static final Object SUCCESS = "SUCCESS";
+        /**
+         * Costant of Object
+         */
         public static final Object ERROR = "ERROR";
-
+        /**
+         * costant of Risk Version Url string
+         */
 	public static final String RISK_VERSION_URL;
+	/**
+	 * Costant of String Risk Lobby
+	 */
 	public static final String RISK_LOBBY_URL;
 //	public static final String RISK_POST_URL; // look in Grasshopper.jar now
+	/**
+	 * Costant of String Game Name
+	 */
 	public static final String GAME_NAME;
+	/**
+	 * Costant of String Risk Version
+	 */
 	public static final String RISK_VERSION;
 //	private static final String DEFAULT_MAP;
 
         private static final Logger logger = Logger.getLogger(RiskUtil.class.getName());
+        /**
+         * RiskIO streamOpener
+         */
 	public static RiskIO streamOpener;
 
 	static {
@@ -381,7 +398,7 @@ public class RiskUtil {
                                             
                                                 String description=MapTranslator.getTranslatedMissionName(st.nextToken()+"-"+st.nextToken()+"-"+st.nextToken()+"-"+st.nextToken()+"-"+st.nextToken()+"-"+st.nextToken());
 
-                                                if (description==null) {
+                                                while (description==null) {
 
                                                         StringBuffer d = new StringBuffer();
 
@@ -392,6 +409,7 @@ public class RiskUtil {
                                                         }
 
                                                         description = d.toString();
+                                                        break;
 
                                                 }
 
@@ -404,9 +422,11 @@ public class RiskUtil {
 
                                         }
                                         else if (mode == null) {
-                                            if (input.indexOf(' ')>0) {
+                                           while (input.indexOf(' ')>0) {
                                                 info.put( input.substring(0,input.indexOf(' ')) , input.substring(input.indexOf(' ')+1) );
-                                            }
+                                           break;
+                                           
+                                           }
                                         }
                                         // if "continents" or "cards" then just dont do anything in those sections
 

@@ -25,6 +25,9 @@ public class AITest extends AISubmissive {
     	 * these are the costant Source and Destination
     	 */
 	public final Country source;
+	/**
+	 * the costant about destination
+	 */
 	public final Country destination;
 
 	public Attack(Country s, Country d){
