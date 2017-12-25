@@ -106,7 +106,9 @@ public class MapChooser implements ActionListener,MapServerListener {
             //RiskUtil.printStackTrace(ex);
         }
     }
-
+    
+    // provo
+    
     public MapChooser(ActionListener al, java.util.List<String> localMaps, Set<String> allowedMaps) {
         this.al = al;
         this.localMaps = localMaps;
@@ -415,7 +417,40 @@ public class MapChooser implements ActionListener,MapServerListener {
     void makeRequestForMap(String a,String b) {
         client.makeRequestXML( MAP_PAGE , a, b);
     }
+    
+    public void actionPerformed(String actionCommand) {
+    	if ("local".equals(actionCommand)) {
+            mainCatList(actionCommand);
 
+            new Thread() {
+                @Override
+                public void run() {
+                    java.util.List riskmaps = new java.util.Vector(localMaps.size());
+                    for (int c = 0; c < localMaps.size(); c++) {
+                        String file = (String) localMaps.get(c);
+
+                        // we create a Map object for every localy stored map
+                        Map map = createMap(file);
+
+                        riskmaps.add( map );
+                    }
+
+                    // we want to sort by name for the local map list
+                    Collections.sort(riskmaps, new Comparator() {
+                        public int compare(Object t1, Object t2) {
+                            Map m1 = (Map)t1;
+                            Map m2 = (Map)t2;
+                            return String.CASE_INSENSITIVE_ORDER.compare(m1.getName(), m2.getName());
+                        }
+                    });
+
+                    setListData( null, riskmaps );
+                }
+            }.start();
+        }
+    }
+    
+    /**
     public void actionPerformed(String actionCommand) {
         if ("local".equals(actionCommand)) {
             mainCatList(actionCommand);
@@ -555,6 +590,7 @@ public class MapChooser implements ActionListener,MapServerListener {
             System.out.println("Unknown command "+actionCommand);
         }
     }
+    */
 
     public void click(Map map) {
         String fileUID = getFileUID( map.getMapUrl() );
