@@ -137,25 +137,34 @@ public class MapChooser implements ActionListener,MapServerListener {
                 Icon off = new Icon("/ms_bar_off.png");
                 int w = off.getIconWidth() / buttons.size();
                 for (int c=0;c<buttons.size();c++) {
-                    RadioButton b = (RadioButton)buttons.get(c);
-                    Icon oni = on.getSubimage(c*w, 0, w, off.getIconHeight());
-                    Icon offi = off.getSubimage(c*w, 0, w, off.getIconHeight());
-
-                    b.setIcon(offi);
-                    b.setSelectedIcon(oni);
-                    b.setRolloverIcon(offi);
-                    b.setRolloverSelectedIcon(oni);
-
-                    b.setToolTipText( b.getText() );
-
-                    b.setText("");
-                    b.setMargin(0);
+                    RadioButtonMethod();
                 }
             }
         }
         
         applied();
         
+    }
+    
+    /**
+     * Another Method Created tell RadioButtonMethod
+     */
+    
+    public void RadioButtonMethod()
+    {
+    	RadioButton b = (RadioButton)buttons.get(c);
+        Icon oni = on.getSubimage(c*w, 0, w, off.getIconHeight());
+        Icon offi = off.getSubimage(c*w, 0, w, off.getIconHeight());
+
+        b.setIcon(offi);
+        b.setSelectedIcon(oni);
+        b.setRolloverIcon(offi);
+        b.setRolloverSelectedIcon(oni);
+
+        b.setToolTipText( b.getText() );
+
+        b.setText("");
+        b.setMargin(0);
     }
     
     /*
@@ -215,11 +224,31 @@ public class MapChooser implements ActionListener,MapServerListener {
             return false;
         }
     }
+    
+    /**
+     * method
+     */
+    public void IconGetx()
+    {
+    	String url = getURL(context, iconUrl);
+    	System.out.println("[MapChooser] ### Going to re-encode img: "+url);
+        InputStream min = RiskUtil.openMapStream(url);
+        Image img = MapChooser.createImage(min);
+        img = ImageUtil.scaleImage(img, 150, 94);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageUtil.saveImage(img, out);
+        img = null; // drop the small image as soon as we can
+        byte[] bytes = out.toByteArray();
+        out = null; // drop the OutputStream as soon as we can
+        cache(url,bytes);
+        // TODO we should only cache if we are sure it can be opened as a image
+        in = new ByteArrayInputStream(bytes);
+    }
 
     /**
      * @param key can be a Map or a Category
      */
-    public static Icon getIconForMapOrCategory(Object key,String context,String iconUrl,MapServerClient c) {
+    public static Icon getIconForMapOrCategory1(Object key,String context,String iconUrl,MapServerClient c) {
         Icon aicon = iconCache.get( key );
         if (aicon==null) {
             aicon = iconCache.newIcon(key);
@@ -227,8 +256,7 @@ public class MapChooser implements ActionListener,MapServerListener {
             String url = getURL(context, iconUrl);
 
             // if this is a remote file
-            if ( url.indexOf(':')>0 )
-                getRemoteImage(key, url, c);
+            if ( url.indexOf(':')>0 ) getRemoteImage(key, url, c);
             // if this is a locale file
             else {
                 InputStream in=null;
@@ -248,18 +276,9 @@ public class MapChooser implements ActionListener,MapServerListener {
 
                     while (in==null) {
                         try {
-                            System.out.println("[MapChooser] ### Going to re-encode img: "+url);
-                            InputStream min = RiskUtil.openMapStream(url);
-                            Image img = MapChooser.createImage(min);
-                            img = ImageUtil.scaleImage(img, 150, 94);
-                            ByteArrayOutputStream out = new ByteArrayOutputStream();
-                            ImageUtil.saveImage(img, out);
-                            img = null; // drop the small image as soon as we can
-                            byte[] bytes = out.toByteArray();
-                            out = null; // drop the OutputStream as soon as we can
-                            cache(url,bytes);
-                            // TODO we should only cache if we are sure it can be opened as a image
-                            in = new ByteArrayInputStream(bytes);
+                        	
+                        	IconGetx();
+                            
                         }
                         catch (OutOfMemoryError err) { // what can we do?
                             Logger.info("cant resize " + url, err);
