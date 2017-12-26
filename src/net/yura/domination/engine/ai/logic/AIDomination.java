@@ -395,11 +395,40 @@ public class AIDomination extends AISubmissive {
 
 	/**
 	 * Gives a score (lower is better) to a country
+	 * 
 	 */
-	protected int scoreCountry(Country country) {
-		final int n = country.getIncomingNeighbours().size();
-		int countryScore = n + 6; //normalize so that 1 is the best score for an empty country
-		if (country.getArmies() > 0) {
+    protected country_cn() {
+		Country cn = country.getIncomingNeighbours().get(k);
+		if (cn.getOwner() == player) {
+			neighborBonus-=cn.getArmies();
+			neighbors++;
+		} else if (cn.getOwner() != null) {
+			countryScore+=(cn.getArmies()/2 + cn.getArmies()%2);
+		}
+	
+    }
+    
+    protected country_cn2() {
+
+		Country cn = (Country) country.getNeighbours().get(k);
+		if (cn.getOwner() == player) {
+			neighborBonus-=cn.getArmies();
+			neighbors++;
+		} else if (cn.getOwner() == null && cn.getContinent() != country.getContinent()) {
+			countryScore--;
+		}
+	
+    }
+    
+    protected game_setup(){
+		countryScore -= Math.pow(neighbors, 2);
+		if (!game.getSetupDone()) {
+			countryScore = Math.max(1, countryScore);
+		}
+	
+    }
+   protected country_score(){
+    	if (country.getArmies() > 0) {
 			countryScore += n;
 			countryScore -= country.getArmies();
 		}
@@ -409,38 +438,32 @@ public class AIDomination extends AISubmissive {
 		if (game.getSetupDone() && country.getCrossContinentNeighbours().size() == 1) {
 			countryScore -= 3;
 		}
+    }
+   
+	protected int scoreCountry(Country country) {
+		final int n = country.getIncomingNeighbours().size();
+		int countryScore = n + 6; //normalize so that 1 is the best score for an empty country
+		
+		country_score();
+		
 		int neighborBonus = 0;
 		int neighbors = 0;
 		//defense
 		for (int k = 0; k < n; k++) {
-			Country cn = country.getIncomingNeighbours().get(k);
-			if (cn.getOwner() == player) {
-				neighborBonus-=cn.getArmies();
-				neighbors++;
-			} else if (cn.getOwner() != null) {
-				countryScore+=(cn.getArmies()/2 + cn.getArmies()%2);
-			}
+			country_cn();
 		}
 		int n1 = country.getNeighbours().size();
 		//attack
 		for (int k = 0; k < n1; k++) {
-			Country cn = (Country) country.getNeighbours().get(k);
-			if (cn.getOwner() == player) {
-				neighborBonus-=cn.getArmies();
-				neighbors++;
-			} else if (cn.getOwner() == null && cn.getContinent() != country.getContinent()) {
-				countryScore--;
-			}
+			country_cn2();
 		}
 
 		neighbors = neighbors/2 + neighbors%2;
 		countryScore += neighborBonus/4 + neighborBonus%2;
 
 		if (!game.getSetupDone() || neighbors > 1) {
-			countryScore -= Math.pow(neighbors, 2);
-			if (!game.getSetupDone()) {
-				countryScore = Math.max(1, countryScore);
-			}
+			game_setup();
+			
 		}
 		return countryScore;
 	}
@@ -746,7 +769,36 @@ public class AIDomination extends AISubmissive {
 	protected boolean isIncreasingSet() {
 		return game.getCardMode() == RiskGame.CARD_INCREASING_SET && (type != PLAYER_AI_HARD || game.getNewCardState() > 12) && (!game.getCards().isEmpty() || game.isRecycleCards());
 	}
+	
+	private target_null() {
+		int route = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
+		if (target == null || gameState.targetPlayers.contains(at.targetCountry.getOwner()) || r.nextBoolean()) {
+			bestRoute = route;
+			target = at;
+	}
+	}
+		
+	private attack_target() {
 
+		boolean  target = (target != null && at.remaining < target.remaining);
+		boolean remaining =(at.remaining > 0);
+		
+		
+		AttackTarget at = attacks.get(i);
+		if (target  || remaining) {
+			break;
+		}
+		if (found) {
+			continue;
+		}
+		if (continents.size() > 0 && at.targetCountry.getContinent() == continents.get(0).co) {
+			bestRoute = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
+			target = at;
+			found = true;
+		} else {
+			target_null();
+		}
+	}
 	private String ensureRiskCard(List<Country> attackable, GameState gameState,
 								  Map<Country, AttackTarget> targets, boolean pressAttack, List<EliminationTarget> continents) {
 		if (this.type == AIDomination.PLAYER_AI_EASY) {
@@ -758,28 +810,7 @@ public class AIDomination extends AISubmissive {
 		boolean found = false;
 		int bestRoute = 0;
 		for (int i = attacks.size() - 1; i >= 0; i--) {
-			AttackTarget at = attacks.get(i);
-			if (target != null && at.remaining < target.remaining) {
-				break;
-			}
-			if (found) {
-				continue;
-			}
-			if (at.remaining > 0) {
-				target = null;
-				break;
-			}
-			if (continents.size() > 0 && at.targetCountry.getContinent() == continents.get(0).co) {
-				bestRoute = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
-				target = at;
-				found = true;
-			} else {
-				int route = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
-				if (target == null || gameState.targetPlayers.contains(at.targetCountry.getOwner()) || r.nextBoolean()) {
-					bestRoute = route;
-					target = at;
-				}
-			}
+			attack_target();
 		}
 		if (target != null) {
 			return getPlaceCommand(attackable.get(bestRoute), -target.remaining + 1);
