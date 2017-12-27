@@ -646,7 +646,7 @@ public class AIDomination extends AISubmissive {
         }
     }
     private String deleteThisCC12(int i,List<EliminationTarget> continents,boolean attack,GameState gameState,
-                                Map<Country, AttackTarget> targets,List<Country> attackable, boolean pressAttack) {
+                                  Map<Country, AttackTarget> targets,List<Country> attackable, boolean pressAttack) {
         String s = null;
         if (shouldProactivelyFortify(continents.get(i).co,
                 attack, attackable, gameState,
@@ -675,7 +675,7 @@ public class AIDomination extends AISubmissive {
         }
     }
     private String deleteThisCC10(AttackTarget min,GameState gameState,boolean attack,Map<Country,AttackTarget> targets,List<Country> attackable) {
-       String s = null;
+        String s = null;
         while(min != null) {
             int route = findBestRoute(attackable, gameState, attack, min.targetCountry.getContinent(),
                     min, game.getSetupDone()?(Player)gameState.targetPlayers.get(0):null, targets);
@@ -1710,7 +1710,8 @@ public class AIDomination extends AISubmissive {
     /**
      * Break continents starting with the strongest player
      */
-    private String breakContinent(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState, boolean attack, boolean press, List<Country> borders) {
+    private String breakContinent(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState, boolean attack, boolean press,
+                                  List<Country> borders) {
         List<Continent> toBreak = getContinentsToBreak(gameState);
         if (!attack && type == PLAYER_AI_EASY) {
             return null;
@@ -1719,50 +1720,16 @@ public class AIDomination extends AISubmissive {
             Continent c = toBreak.get(i);
             Player tp = ((Country)c.getTerritoriesContained().get(0)).getOwner();
             PlayerState ps = null;
-            for (int j = 0; j < gameState.orderedPlayers.size(); j++) {
-                ps = gameState.orderedPlayers.get(j);
-                if (ps.p == tp) {
-                    break;
-                }
-            }
-            //next level check to see if breaking is a good idea
-            if ((!press || !attack) && !gameState.targetPlayers.contains(tp)) {
-                if (gameState.commonThreat != null || gameState.breakOnlyTargets) {
-                    continue;
-                }
-                if (ps.attackOrder != 1 && ps.playerValue < gameState.me.playerValue) {
-                    continue;
-                }
-            }
+            ps = createPS(gameState,tp);
             //find the best territory to attack
             List<Country> t = c.getTerritoriesContained();
             int best = Integer.MAX_VALUE;
             AttackTarget selection = null;
             int bestRoute = 0;
-            for (int j = 0; j < t.size(); j++) {
-                Country target = t.get(j);
-                AttackTarget attackTarget = targets.get(target);
-                if (attackTarget == null
-                        || attackTarget.remaining == Integer.MIN_VALUE
-                        || (attackTarget.remaining + player.getExtraArmies() < 1
-                        && (!game.getCards().isEmpty() || !press))) {
-                    continue;
-                }
-                int route = findBestRoute(attackable, gameState, attack, null, attackTarget, gameState.orderedPlayers.get(0).p, targets);
-                Country attackFrom = attackable.get(route);
-                if (gameState.commonThreat == null && !gameState.breakOnlyTargets && gameState.me.owned.isEmpty() && attackTarget.routeRemaining[route] + player.getExtraArmies() < 1) {
-                    continue;
-                }
-                int cost = attackFrom.getArmies() - attackTarget.routeRemaining[route];
-                if (borders.contains(attackFrom)) {
-                    cost += game.getMaxDefendDice();
-                }
-                if (cost < best || (cost == best && r.nextBoolean())) {
-                    best = cost;
-                    bestRoute = route;
-                    selection = attackTarget;
-                }
-            }
+            Object[] obj = checkFor(t,targets,gameState,attack,borders,best,attackable);
+            best = (int)obj[1];
+            bestRoute = (int)obj[2];
+            selection = (AttackTarget)obj[3];
             if (selection != null) {
                 Country attackFrom = attackable.get(bestRoute);
                 if (best > (3*c.getArmyValue() + 2*selection.targetCountry.getArmies()) && game.getMaxDefendDice() == 2) {
@@ -1770,43 +1737,94 @@ public class AIDomination extends AISubmissive {
                     int value = 3*c.getArmyValue();
                     int collateral = 0;
                     Set<Country> path = getPath(selection, targets, bestRoute, attackFrom);
-                    for (Iterator<Country> j = path.iterator(); j.hasNext();) {
-                        Country attacked = j.next();
-                        value++;
-                        if (attacked.getOwner() == selection.targetCountry.getOwner() || gameState.targetPlayers.contains(attacked.getOwner())) {
-                            while (game.getMaxDefendDice() == 2 || attacked.getArmies() < 3) {
-                                value += 3*attacked.getArmies()/2 + attacked.getArmies()%2;
-                                break;
-                            } while(!(game.getMaxDefendDice() == 2 || attacked.getArmies() < 3))  {
-                                value += 2*attacked.getArmies();
-                                break;
-                            }
-                        } else {
-                            while (game.getMaxDefendDice() == 2 || attacked.getArmies() < 3) {
-                                collateral += 3*attacked.getArmies()/2 + attacked.getArmies()%2;
-                            } while(!(game.getMaxDefendDice() == 2 || attacked.getArmies() < 3)) {
-                                collateral += 2*attacked.getArmies();
-                            }
-                        }
-                    }
-                    if (value < best && (!attack || r.nextInt(best - value) != 0) && (gameState.commonThreat == null || !gameState.breakOnlyTargets || value/ps.attackOrder < collateral)) {
-                        continue;
-                    }
+                    collateral = valueFor(value,gameState,selection,path);
                 }
                 String result = getMove(targets, attack, selection, bestRoute, attackFrom);
-                if (result == null) {
-                    continue;
-                }
                 breaking = c;
                 return result;
             }
         }
         return null;
     }
+    private int valueFor(int value,GameState gameState,AttackTarget selection,Set<Country> path) {
+        int collateral = 0;
+        for (Iterator<Country> j = path.iterator(); j.hasNext();) {
+            Country attacked = j.next();
+            value++;
+            if (attacked.getOwner() == selection.targetCountry.getOwner() || gameState.targetPlayers.contains(attacked.getOwner())) {
+                value = createValue(attacked);
+            } else {
+                collateral = createCollateral(attacked);
+            }
+        }
+        return collateral;
+    }
+    private PlayerState createPS(GameState gameState,Player tp) {
+        PlayerState ps = null;
+        for (int j = 0; j < gameState.orderedPlayers.size(); j++) {
+            ps = gameState.orderedPlayers.get(j);
+            if (ps.p == tp) {
+                break;
+            }
+        }
+        return ps;
+    }
+    private int createValue(Country attacked) {
+        int value = 0;
+        while (game.getMaxDefendDice() == 2 || attacked.getArmies() < 3) {
+            value += 3*attacked.getArmies()/2 + attacked.getArmies()%2;
+            break;
+        } while(!(game.getMaxDefendDice() == 2 || attacked.getArmies() < 3))  {
+            value += 2*attacked.getArmies();
+            break;
+        }
+        return value;
+    }
+    private int createCollateral(Country attacked) {
+        int collateral = 0;
+        while (game.getMaxDefendDice() == 2 || attacked.getArmies() < 3) {
+            collateral += 3*attacked.getArmies()/2 + attacked.getArmies()%2;
+        } while(!(game.getMaxDefendDice() == 2 || attacked.getArmies() < 3)) {
+            collateral += 2*attacked.getArmies();
+        }
+        return collateral;
+    }
+    private Object[] checkFor(List<Country> t,Map<Country,AttackTarget> targets, GameState gameState, boolean attack,List<Country> borders,int best,
+                              List<Country> attackable) {
+        Object[] obj = new Object[3];
+        int size = t.size();
+        for (int j = 0; j < size; j++) {
+            Country target = t.get(j);
+            AttackTarget attackTarget = targets.get(target);
+            int route = findBestRoute(attackable, gameState, attack, null, attackTarget, gameState.orderedPlayers.get(0).p, targets);
+            Country attackFrom = attackable.get(route);
+            int cost = attackFrom.getArmies() - attackTarget.routeRemaining[route];
+            cost = createCost(borders,attackFrom);
+            obj = createCostOther(cost,best,route,attackTarget);
 
+        }
+        return obj;
+    }
+    private Object[] createCostOther(int cost, int best, int route,AttackTarget attackTarget) {
+        Object[] obj = new Object[3];
+        if (cost < best || (cost == best && r.nextBoolean())) {
+            obj[1] = cost;
+            obj[2] = route;
+            obj[3] = attackTarget;
+        }
+        return obj;
+    }
+    private int createCost(List<Country> borders,Country attackFrom) {
+        int cost = 0;
+        if (borders.contains(attackFrom)) {
+            cost += game.getMaxDefendDice();
+        }
+        return cost;
+    }
     /**
      * Get a list of continents to break in priority order
      */
+
     protected List<Continent> getContinentsToBreak(GameState gs) {
         List<Continent> result = new ArrayList<Continent>();
         List<Double> vals = new ArrayList<Double>();
@@ -1832,16 +1850,15 @@ public class AIDomination extends AISubmissive {
     protected String eliminate(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState, boolean attack, int remaining, Set<Country> allCountriesTaken, EliminationTarget et, boolean shouldEndAttack, boolean lowProbability) {
         AttackTarget selection = null;
         int bestRoute = 0;
-        if (type == PLAYER_AI_EASY || (type == PLAYER_AI_AVERAGE && !et.allOrNone && r.nextInt(3) != 0) || (!et.allOrNone && !et.target && shouldEndAttack && attack)) {
+        if (type == PLAYER_AI_EASY || (type == PLAYER_AI_AVERAGE && !et.allOrNone && r.nextInt(3) != 0) ||
+                (!et.allOrNone && !et.target && shouldEndAttack && attack)) {
             //just be greedy, take the best (least costly) attack first
             for (int i = 0; i < et.attackTargets.size(); i++) {
                 AttackTarget at = et.attackTargets.get(i);
-                if (at.depth != 1 || allCountriesTaken.contains(at.targetCountry)) {
-                    continue;
-                }
                 int route = findBestRoute(attackable, gameState, attack, null, at, et.ps.p, targets);
                 Country attackFrom = attackable.get(route);
-                if (((at.routeRemaining[route] > 0 && (selection == null || at.routeRemaining[route] < selection.routeRemaining[bestRoute] || selection.routeRemaining[bestRoute] < 1))
+                if (((at.routeRemaining[route] > 0 && (selection == null || at.routeRemaining[route] <
+                        selection.routeRemaining[bestRoute] || selection.routeRemaining[bestRoute] < 1))
                         || (at.remaining > 1 && attackFrom.getArmies() > 3 && (selection != null && at.remaining < selection.remaining)))
                         && isGoodIdea(gameState, targets, route, at, attackFrom, et, attack)) {
                     selection = at;
@@ -1896,7 +1913,8 @@ public class AIDomination extends AISubmissive {
                                 HashSet<Country> exclusions = new HashSet<Country>(countriesTaken);
                                 exclusions.addAll(path);
                                 Map<Country, AttackTarget> newTargets = new HashMap<Country, AttackTarget>();
-                                searchTargets(newTargets, attackTarget.targetCountry, pathRemaining, 0, 1, remaining, lowProbability?true:attack, toTake, exclusions, gameState);
+                                searchTargets(newTargets, attackTarget.targetCountry, pathRemaining, 0, 1, remaining,
+                                        lowProbability?true:attack, toTake, exclusions, gameState);
                                 //find the best fit new path if one exists
                                 AttackTarget newTarget = null;
                                 for (Iterator<AttackTarget> j = newTargets.values().iterator(); j.hasNext();) {
@@ -2775,6 +2793,7 @@ public class AIDomination extends AISubmissive {
 
     @Override
     protected String getTrade(Card[] result) {
+        String s = null;
         if (type != PLAYER_AI_EASY) {
             boolean[] owns = new boolean[result.length];
             int ownsCount = 0;
@@ -2787,36 +2806,48 @@ public class AIDomination extends AISubmissive {
             //swap for a single owned country - TODO: be smarter about which territory to retain
             if (ownsCount != 1 && player.getCards().size() > 3) {
                 List<Card> toTrade = Arrays.asList(result);
-                for (Card card : (List<Card>)player.getCards()) {
-                    if (toTrade.contains(card)) {
-                        continue;
-                    }
-                    if (ownsCount > 1) {
-                        while(card.getCountry() == null || !player.getTerritoriesOwned().contains(card.getCountry())) break;{
-                            for (int i = 0; i < result.length; i++) {
-                                while(result[i].getName().equals(card.getName())) {
-                                    result[i] = card;
-                                    while(--ownsCount == 1) {
-                                        return super.getTrade(result);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } else {
-                        while(card.getCountry() != null && player.getTerritoriesOwned().contains(card.getCountry())) {
-                            for (int i = 0; i < result.length; i++) {
-                                while (result[i].getName().equals(card.getName())) {
-                                    result[i] = card;
-                                    return super.getTrade(result);
-                                }
-                            }
-                        }
-                    }
+                s = killThisAnotherFor(result,ownsCount);
+            }
+        }
+        return s;
+    }
+    private String killThisWhile(Card[] result, int ownsCount, Card card) {
+        String s = null;
+        for (int i = 0; i < result.length; i++) {
+            while(result[i].getName().equals(card.getName())) {
+                result[i] = card;
+                while(--ownsCount == 1) {
+                    s = super.getTrade(result);
+                }
+                break;
+            }
+        }
+        return s;
+    }
+    private String killThisWhile2(Card[] result, int ownsCount, Card card) {
+        String s = null;
+        while(card.getCountry() != null && player.getTerritoriesOwned().contains(card.getCountry())) {
+            for (int i = 0; i < result.length; i++) {
+                while (result[i].getName().equals(card.getName())) {
+                    result[i] = card;
+                    s = super.getTrade(result);
                 }
             }
         }
-        return super.getTrade(result);
+        return s;
+    }
+    private String killThisAnotherFor(Card[] result, int ownsCount) {
+        String s = null;
+        for (Card card : (List<Card>)player.getCards()) {
+            if (ownsCount > 1) {
+                while(card.getCountry() == null || !player.getTerritoriesOwned().contains(card.getCountry())) {
+                    s = killThisWhile(result,ownsCount,card);
+                }
+            } else {
+                s = killThisWhile2(result,ownsCount,card);
+            }
+        }
+        return s;
     }
 
 }

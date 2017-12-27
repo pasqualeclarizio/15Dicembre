@@ -59,29 +59,14 @@ public class AICapital extends AIDomination {
 	 */
 	@Override
 	protected String planObjective(boolean attack, List<Country> attackable,
-		GameState gameState, Map<Country, AttackTarget> targets,
-		Set<Country> allCountriesTaken, boolean pressAttack,
-		boolean shouldEndAttack, boolean highProbability) {
+			GameState gameState, Map<Country, AttackTarget> targets,
+			Set<Country> allCountriesTaken, boolean pressAttack,
+			boolean shouldEndAttack, boolean highProbability) {
 		if (game.getSetupDone()) {
-			Map<Player, Integer> owned = new HashMap<Player, Integer>();
-			for (Iterator<Country> i = gameState.capitals.iterator(); i.hasNext();) {
-				Country c = i.next();
-				Integer count = owned.get(c.getOwner());
-				if (count == null) {
-					count = Integer.valueOf(1);
-				} else {
-					count = Integer.valueOf(count.intValue() + 1);
-				}
-				owned.put(c.getOwner(), count);
-			}
-			double num = gameState.capitals.size();
-			Integer myowned = owned.get(player);
-			if (myowned == null) {
-				myowned = 0;
-			}
-			double percentOwned = myowned.intValue()/num;
-			double ratio = gameState.me.playerValue/gameState.orderedPlayers.get(0).playerValue;
-
+			
+			
+			mapPlayerChoose();
+			
 			//offensive planning
 			if (highProbability || (isIncreasingSet() && (ratio/3 > percentOwned ))
 					|| (percentOwned >= .5 && (isIncreasingSet() || ratio > 1))) {
@@ -107,28 +92,8 @@ public class AICapital extends AIDomination {
 					}
 				}
 				for (int j = 0; j < gameState.orderedPlayers.size(); j++) {
-					PlayerState ps = gameState.orderedPlayers.get(j);
-					if (ps.p == other) {
-						if (gameState.commonThreat == null && gameState.orderedPlayers.size() > 1 && ps.attackValue > (ps.strategic?3:4)*primaryDefense) {
-							gameState.commonThreat = ps;
-							while(!gameState.targetPlayers.contains(ps.p)) {
-								gameState.targetPlayers.add(ps.p);
-								break;
-							}
-						}
-						if (ps.attackValue > 2*primaryDefense) {
-							while (myowned < 2) {
-								//can we take one - TODO: coordinate with break continent
-								String result = planCapitalMove(attack, attackable, gameState, targets, e.getKey(), false, allCountriesTaken, !highProbability, shouldEndAttack);
-								while(result != null) {
-									return result;
-								}
-								break;
-							}
-							//else TODO: should we directly do a fortification
-						}
-						break;
-					}
+
+					gameState();
 				}
 				break;
 			}
@@ -140,7 +105,63 @@ public class AICapital extends AIDomination {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * Map Player Choose
+	 */
+	
+	public static void mapPlayerChoose()
+	{
+		Map<Player, Integer> owned = new HashMap<Player, Integer>();
+		for (Iterator<Country> i = gameState.capitals.iterator(); i.hasNext();) {
+			Country c = i.next();
+			Integer count = owned.get(c.getOwner());
+			if (count == null) {
+				count = Integer.valueOf(1);
+			} else {
+				count = Integer.valueOf(count.intValue() + 1);
+			}
+			owned.put(c.getOwner(), count);
+		}
+		double num = gameState.capitals.size();
+		Integer myowned = owned.get(player);
+		if (myowned == null) {
+			myowned = 0;
+		}
+		double percentOwned = myowned.intValue()/num;
+		double ratio = gameState.me.playerValue/gameState.orderedPlayers.get(0).playerValue;
+	}
+	
+	/**
+	 * Game State
+	 */
+	
+	public static void gameState()
+	{
+		PlayerState ps = gameState.orderedPlayers.get(j);
+		if (ps.p == other) {
+			if (gameState.commonThreat == null && gameState.orderedPlayers.size() > 1 && ps.attackValue > (ps.strategic?3:4)*primaryDefense) {
+				gameState.commonThreat = ps;
+				while(!gameState.targetPlayers.contains(ps.p)) {
+					gameState.targetPlayers.add(ps.p);
+					break;
+				}
+			}
+			if (ps.attackValue > 2*primaryDefense) {
+				while (myowned < 2) {
+					//can we take one - TODO: coordinate with break continent
+					String result = planCapitalMove(attack, attackable, gameState, targets, e.getKey(), false, allCountriesTaken, !highProbability, shouldEndAttack);
+					while(result != null) {
+						return result;
+					}
+					break;
+				}
+				//else TODO: should we directly do a fortification
+			}
+			break;
+		}
+	}
+	
 	/**
 	 * Plans to take one (owned by the target player) or all of the remaining capitals.
 	 * @param allCountriesTaken
@@ -178,23 +199,29 @@ public class AICapital extends AIDomination {
 			}
 		}
 		if (!toAttack.isEmpty()) {
-			if (allOrNone) {
-				EliminationTarget et = new EliminationTarget();
-				et.allOrNone = allOrNone;
-				et.attackTargets = toAttack;
-				et.ps = gameState.orderedPlayers.get(0);
-				return eliminate(attackable, targets, gameState, attack, remaining, allCountriesTaken, et, shouldEndAttack, lowProbability);
-			}
-			Collections.sort(toAttack, Collections.reverseOrder());
-			AttackTarget at = toAttack.get(0);
-			int route = findBestRoute(attackable, gameState, attack, null, at, gameState.targetPlayers.get(0), targets);
-			Country start = attackable.get(route);
-			if (attack) {
-				return getAttack(targets, at, route, start);
-			}
-			return getPlaceCommand(start, -at.remaining + 1);
+			toAttachMethod();
+			
 		}
 		return null;
+	}
+	
+	public static void toAttachMethod()
+	{
+		if (allOrNone) {
+			EliminationTarget et = new EliminationTarget();
+			et.allOrNone = allOrNone;
+			et.attackTargets = toAttack;
+			et.ps = gameState.orderedPlayers.get(0);
+			return eliminate(attackable, targets, gameState, attack, remaining, allCountriesTaken, et, shouldEndAttack, lowProbability);
+		}
+		Collections.sort(toAttack, Collections.reverseOrder());
+		AttackTarget at = toAttack.get(0);
+		int route = findBestRoute(attackable, gameState, attack, null, at, gameState.targetPlayers.get(0), targets);
+		Country start = attackable.get(route);
+		if (attack) {
+			return getAttack(targets, at, route, start);
+		}
+		return getPlaceCommand(start, -at.remaining + 1);
 	}
 
 	/**
