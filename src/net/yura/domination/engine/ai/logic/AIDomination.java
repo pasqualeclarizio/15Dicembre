@@ -2180,6 +2180,7 @@ public class AIDomination extends AISubmissive {
 	/**
 	 * Get an estimate of the remaining troops after taking all possible targets
 	 */
+	
 	private attack_target() {
 
 		AttackTarget attackTarget = i.next();
@@ -2221,6 +2222,7 @@ public class AIDomination extends AISubmissive {
 		return Math.max(isBorder?game.getMaxDefendDice():0, forwardMin);
 	}
 
+	
 	/**
 	 * Takes several passes over applicable territories to determine the tactical move.
 	 * 1. Find all countries with more than the min placement and do the best border fortification possible.
@@ -2363,39 +2365,28 @@ public class AIDomination extends AISubmissive {
 	 * Will roll the maximum, but checks to see if the attack is still the
 	 * best plan every 3rd roll
 	 */
-	public if_get_roll(){
+	public String getRoll() {
+		int n=game.getAttacker().getArmies() - 1;
+		int m=game.getDefender().getArmies();
+
 		if (n < 3 && game.getBattleRounds() > 0 && (n < m || (n == m && game.getDefender().getOwner().getTerritoriesOwned().size() != 1))) {
 			return "retreat";
 		}
 
 		//spot check the plan
 		if (type != AIDomination.PLAYER_AI_EASY && (game.getBattleRounds()%3 == 2 || (game.getBattleRounds() > 0 && (n - Math.min(m, game.getMaxDefendDice()) <= 0)))) {
-			if_check_plan();
+			String result = plan(true);
+			//TODO: rewrite to not use string parsing
+			if (result.equals("endattack")) {
+				return "retreat";
+			}
+			StringTokenizer st = new StringTokenizer(result);
+			st.nextToken();
+			if (game.getAttacker().getColor() != Integer.parseInt(st.nextToken())
+					|| game.getDefender().getColor() != Integer.parseInt(st.nextToken())) {
+				return "retreat";
+			}
 		}
-	}
-	
-	public if_check_plan(){
-
-		String result = plan(true);
-		//TODO: rewrite to not use string parsing
-		if (result.equals("endattack")) {
-			return "retreat";
-		}
-		StringTokenizer st = new StringTokenizer(result);
-		st.nextToken();
-		if (game.getAttacker().getColor() != Integer.parseInt(st.nextToken())
-				|| game.getDefender().getColor() != Integer.parseInt(st.nextToken())) {
-			return "retreat";
-		}
-	
-	}
-	
-	public String getRoll() {
-		int n=game.getAttacker().getArmies() - 1;
-		int m=game.getDefender().getArmies();
-		
-		if_get_roll();
-		
 		return "roll " + Math.min(3, n);
 	}
 
