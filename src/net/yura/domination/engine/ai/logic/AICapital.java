@@ -76,21 +76,11 @@ public class AICapital extends AIDomination {
 				}
 			}
 			//defensive planning
-			for (Iterator<Map.Entry<Player, Integer>> i = owned.entrySet().iterator(); i.hasNext();) {
-				Map.Entry<Player, Integer> e = i.next();
-				Integer numOwned = e.getValue();
-				Player other = e.getKey();
-				if (other == player || numOwned/num < .5) {
-					continue;
-				}
-				//see what the danger level is
-				int primaryDefense = 0;
-				for (Iterator<Country> j = gameState.capitals.iterator(); j.hasNext();) {
-					Country c = j.next();
-					if (c.getOwner() != other) {
-						primaryDefense+=c.getArmies();
-					}
-				}
+			for (Iterator<Map.Entry<Player, Integer>> i = owned.entrySet().iterator(); i.hasNext(); ) {
+				
+				mapEntryMethod();
+				
+				
 				for (int j = 0; j < gameState.orderedPlayers.size(); j++) {
 
 					gameState();
@@ -104,6 +94,24 @@ public class AICapital extends AIDomination {
 			return getPlaceCommand(c, 1);
 		}
 		return null;
+	}
+	
+	public static void mapEntryMethod()
+	{
+		Map.Entry<Player, Integer> e = i.next();
+		Integer numOwned = e.getValue();
+		Player other = e.getKey();
+		if (other == player || numOwned/num < .5) {
+			continue;
+		}
+		//see what the danger level is
+		int primaryDefense = 0;
+		for (Iterator<Country> j = gameState.capitals.iterator(); j.hasNext();) {
+			Country c = j.next();
+			if (c.getOwner() != other) {
+				primaryDefense+=c.getArmies();
+			}
+		}
 	}
 	
 	/**
@@ -148,15 +156,21 @@ public class AICapital extends AIDomination {
 				}
 			}
 			if (ps.attackValue > 2*primaryDefense) {
-				while (myowned < 2) {
-					//can we take one - TODO: coordinate with break continent
-					String result = planCapitalMove(attack, attackable, gameState, targets, e.getKey(), false, allCountriesTaken, !highProbability, shouldEndAttack);
-					while(result != null) {
-						return result;
-					}
-					break;
-				}
+				myowendMeth();
+				
 				//else TODO: should we directly do a fortification
+			}
+			break;
+		}
+	}
+	
+	public static void myowendMeth()
+	{
+		while (myowned < 2) {
+			//can we take one - TODO: coordinate with break continent
+			String result = planCapitalMove(attack, attackable, gameState, targets, e.getKey(), false, allCountriesTaken, !highProbability, shouldEndAttack);
+			while(result != null) {
+				return result;
 			}
 			break;
 		}
@@ -169,40 +183,46 @@ public class AICapital extends AIDomination {
 	 * @param shouldEndAttack
 	 */
 	private String planCapitalMove(boolean attack, List<Country> attackable,
-			GameState gameState, Map<Country, AttackTarget> targets, Player target, boolean allOrNone, Set<Country> allCountriesTaken, boolean lowProbability, boolean shouldEndAttack) {
+			GameState gameState, Map<Country, AttackTarget> targets, Player target, boolean allOrNone, Set<Country> allCountriesTaken, boolean lowProbability, boolean shouldEndAttack) 
+	{
 		int remaining = player.getExtraArmies();
 		List<AttackTarget> toAttack = new ArrayList<AttackTarget>();
 		for (Iterator<Country> i = gameState.capitals.iterator(); i.hasNext();) {
-			Country c = i.next();
-			if (c.getOwner() == player || (target != null && target != c.getOwner())) {
-				continue;
-			}
-			AttackTarget at = targets.get(c);
-			if (at == null) {
-				if (allOrNone) {
-					return null;
-				}
-				continue;
-			}
-			if (at.remaining < 1) {
-				remaining += at.remaining;
-				if (remaining < 1 && allOrNone) {
-					return null;
-				}
-				if (!attack && !allOrNone) {
-					toAttack.add(at);
-				}
-			} else if (attack) {
-				toAttack.add(at);
-			} else {
-				return null; //should be taken
-			}
+			targetAttack();
 		}
 		if (!toAttack.isEmpty()) {
 			toAttachMethod();
 			
 		}
 		return null;
+	}
+	
+	public static void targetAttack()
+	{
+		Country c = i.next();
+		if (c.getOwner() == player || (target != null && target != c.getOwner())) {
+			continue;
+		}
+		AttackTarget at = targets.get(c);
+		if (at == null) {
+			if (allOrNone) {
+				return null;
+			}
+			continue;
+		}
+		if (at.remaining < 1) {
+			remaining += at.remaining;
+			if (remaining < 1 && allOrNone) {
+				return null;
+			}
+			if (!attack && !allOrNone) {
+				toAttack.add(at);
+			}
+		} else if (attack) {
+			toAttack.add(at);
+		} else {
+			return null; //should be taken
+		}
 	}
 	
 	public static void toAttachMethod()
