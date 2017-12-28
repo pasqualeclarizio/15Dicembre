@@ -53,28 +53,36 @@ public class AICapital extends AIDomination {
 		}
 		return border;
 	}
+	
+	/**
+	 * Method probMethod
+	 * @return boolean
+	 */
+	public static boolean probMethod()
+	{
+		if (highProbability || (isIncreasingSet() && (ratio/3 > percentOwned ))
+				|| (percentOwned >= .5 && (isIncreasingSet() || ratio > 1))) {
+			String result = planCapitalMove(attack, attackable, gameState, targets, null, highProbability, allCountriesTaken, !highProbability, shouldEndAttack);
+			if (result != null) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * Overrides the planning behavior to consider taking capital logic
 	 */
 	@Override
-	protected String planObjective(boolean attack, List<Country> attackable,
-			GameState gameState, Map<Country, AttackTarget> targets,
-			Set<Country> allCountriesTaken, boolean pressAttack,
+	protected String planObjective(boolean attack, List<Country> attackable, GameState gameState, Map<Country, AttackTarget> targets,Set<Country> allCountriesTaken, boolean pressAttack,
 			boolean shouldEndAttack, boolean highProbability) {
 		if (game.getSetupDone()) {
 			
-			
 			mapPlayerChoose();
 			
+			boolean off = probMethod();
 			//offensive planning
-			if (highProbability || (isIncreasingSet() && (ratio/3 > percentOwned ))
-					|| (percentOwned >= .5 && (isIncreasingSet() || ratio > 1))) {
-				String result = planCapitalMove(attack, attackable, gameState, targets, null, highProbability, allCountriesTaken, !highProbability, shouldEndAttack);
-				if (result != null) {
-					return result;
-				}
-			}
+			
 			//defensive planning
 			for (Iterator<Map.Entry<Player, Integer>> i = owned.entrySet().iterator(); i.hasNext(); ) {
 				
@@ -95,6 +103,11 @@ public class AICapital extends AIDomination {
 		}
 		return null;
 	}
+	
+	/**
+	 * mapEntryMethod
+	 * Method without return
+	 */
 	
 	public static void mapEntryMethod()
 	{
@@ -141,7 +154,7 @@ public class AICapital extends AIDomination {
 	}
 	
 	/**
-	 * Game State
+	 * Method gameState
 	 */
 	
 	public static void gameState()
@@ -164,6 +177,10 @@ public class AICapital extends AIDomination {
 		}
 	}
 	
+	/**
+	 * method without return
+	 * Procedure myOwendMeth
+	 */
 	public static void myowendMeth()
 	{
 		while (myowned < 2) {
@@ -197,35 +214,50 @@ public class AICapital extends AIDomination {
 		return null;
 	}
 	
-	public static void targetAttack()
+	/**
+	 * targetAttack Method
+	 * @return String
+	 */
+	public static String targetAttack()
 	{
 		Country c = i.next();
-		if (c.getOwner() == player || (target != null && target != c.getOwner())) {
+		if (c.getOwner() == player || (target != null && target != c.getOwner()))
 			continue;
-		}
+		
 		AttackTarget at = targets.get(c);
-		if (at == null) {
+		if (at == null)
 			if (allOrNone) {
 				return null;
 			}
 			continue;
-		}
+		boolean met = remaingIs();
+	}
+	
+	/**
+	 * Method remaingIs
+	 * @return boolean value
+	 */
+	public static boolean remaingIs()
+	{
 		if (at.remaining < 1) {
 			remaining += at.remaining;
-			if (remaining < 1 && allOrNone) {
-				return null;
-			}
-			if (!attack && !allOrNone) {
+			if (remaining < 1 && allOrNone)
+				return false;
+			if (!attack && !allOrNone)
 				toAttack.add(at);
-			}
 		} else if (attack) {
 			toAttack.add(at);
 		} else {
-			return null; //should be taken
+			return false;
 		}
+		return true;
 	}
 	
-	public static void toAttachMethod()
+	/**
+	 * Method toAttachMethod()
+	 * @return String
+	 */
+	public static String toAttachMethod()
 	{
 		if (allOrNone) {
 			EliminationTarget et = new EliminationTarget();
