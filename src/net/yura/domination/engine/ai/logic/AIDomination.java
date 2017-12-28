@@ -2,6 +2,7 @@
 
 package net.yura.domination.engine.ai.logic;
 
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -294,32 +295,24 @@ public class AIDomination extends AISubmissive {
                 } else {
                     Integer index = players.get(country.getOwner());
                     troops[index.intValue()]++;
-                    Object[] arrayPlacementOwner = checkPlaceOwner(country.getOwner(),otherOwner);
-                    hasPlacement = (boolean)arrayPlacementOwner[0];
-                    otherOwner = (Player)arrayPlacementOwner[1];
+                    checkPlaceOwner(country.getOwner(),otherOwner);
                 }
             }
             getPlace = checkTypePlacement(hasPlacement, preferedCountry);
             /* Calculate the base value of that continent */
             double continentValue = getContinentValue(co);
-            Object[] arrayPlace = checkFor(troops,continentValue,bestCountryScore,ct.size(),preferedCountry,check);
-            toPlace = (Country)arrayPlace[0];
-            check = (int)arrayPlace[1];
+            checkFor(troops,continentValue,bestCountryScore,ct.size(),preferedCountry,check);
         }
         checkPlace(toPlace);
         getPlace = getPlaceCommand(toPlace, 1);
         return getPlace;
     }
-    private Object[] checkPlaceOwner(Player owner, Player otherOwner) {
-        final int HAS_PLACEMENT = 0;
-        final int OTHER_OWNER = 1;
-        Object[] array = new Object[2];
+    private void checkPlaceOwner(Player owner, Player otherOwner) {
         if (owner == player || otherOwner != owner && r.nextBoolean()) {
-            array[HAS_PLACEMENT] = true;
+            boolean hasPlacement = true;
         } else if (otherOwner == null) {
-            array[OTHER_OWNER] = owner;
+            otherOwner = owner;
         }
-        return array;
     }
     private String checkTypePlacement(boolean hasPlacement, Country preferedCountry) {
         String s = null;
@@ -334,11 +327,8 @@ public class AIDomination extends AISubmissive {
             players.put((Player) this.game.getPlayers().get(i), Integer.valueOf(i));
         return players;
     }
-    private Object[] checkFor(int[] troops, double continentValue,
+    private void checkFor(int[] troops, double continentValue,
                               int bestCountryScore, int ct, Country preferedCountry, double check) {
-        final int TO_PLACE = 0;
-        final int CHECK = 1;
-        Object[] array = new Object[2];
         for (int j = 0; j < troops.length; j++) {
             int[] arrayEnemyTerritory = takeEnemyTerritory(troops,j);
             int numberofEnemyUnits = arrayEnemyTerritory[0];
@@ -348,13 +338,7 @@ public class AIDomination extends AISubmissive {
             double score = territorynum / Math.max(1d, (numberofEnemyUnits * numberOfEnemies));
             score *= continentValue;
             score /= bestCountryScore;
-
-            Object[] arrayCheckPlace;
-            arrayCheckPlace = checkPlace(preferedCountry, territorynum, ct, score,check);
-            array[TO_PLACE] = arrayCheckPlace[0];
-            array[CHECK] = arrayCheckPlace[1];
         }
-        return array;
     }
     private void checkPlace(Country toPlace) {
         if(toPlace == null)
@@ -374,21 +358,6 @@ public class AIDomination extends AISubmissive {
                     array[NUMBER_OF_ENEMIES]++;
                 }
             }
-        }
-        return array;
-    }
-    private Object[] checkPlace(Country preferedCountry,int territorynum,int ct,double score, double check) {
-        final int TO_PLACE = 0;
-        final int CHECK = 1;
-        Object[] array = new Object[2];
-        if(territorynum == ct)
-            array[TO_PLACE] = preferedCountry;
-
-        if (check <= score) {
-            array[CHECK] = score;
-            array[TO_PLACE] = preferedCountry;
-        } else if (array[TO_PLACE] == null) {
-            array[TO_PLACE] = preferedCountry;
         }
         return array;
     }
@@ -733,9 +702,7 @@ public class AIDomination extends AISubmissive {
                 return objective;
 
             }
-            Object[] arrayOb = deleteThisCC4(gameState,attackable,extra,allCountriesTaken,attack,targets,shouldEndAttack,toEliminate);
-            s = (String)arrayOb[1];
-            shouldEndAttack = (boolean)arrayOb[2];
+            deleteThisCC4(gameState,attackable,extra,allCountriesTaken,attack,targets,shouldEndAttack,toEliminate);
             s = deleteThisCC6(gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents,isTooWeak,shouldEndAttack);
         } else if (!attack) {
             String result = fortify(gameState, attackable, game.getMaxDefendDice() == 2, v);
@@ -911,21 +878,20 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private Object[] deleteThisCC4(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
+    private void deleteThisCC4(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                    boolean attack,Map<Country, AttackTarget> targets,boolean shouldEndAttack,List<EliminationTarget> toEliminate) {
-        Object[] array = new Object[2];
+        boolean check = false;
         if (type == PLAYER_AI_HARD && gameState.orderedPlayers.size() > 1
                 && (isIncreasingSet() || gameState.me.playerValue > gameState.orderedPlayers.get(0).playerValue)) {
             //consider low probability eliminations
             while (!toEliminate.isEmpty()) {
-                array[1] = deleteThisCC2(toEliminate,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack,targets);
+                deleteThisCC2(toEliminate,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack,targets);
             }
             //just try to stay in the game
             while(isIncreasingSet() && gameState.me.defenseValue < gameState.orderedPlayers.get(0).attackValue) {
-                array[2] = true;
+                check = true;
             }
         }
-        return array;
     }
     protected String planObjective(boolean attack, List<Country> attackable,
                                    GameState gameState, Map<Country, AttackTarget> targets,
@@ -1726,10 +1692,6 @@ public class AIDomination extends AISubmissive {
             int best = Integer.MAX_VALUE;
             AttackTarget selection = null;
             int bestRoute = 0;
-            Object[] obj = checkFor(t,targets,gameState,attack,borders,best,attackable);
-            best = (int)obj[1];
-            bestRoute = (int)obj[2];
-            selection = (AttackTarget)obj[3];
             if (selection != null) {
                 Country attackFrom = attackable.get(bestRoute);
                 if (best > (3*c.getArmyValue() + 2*selection.targetCountry.getArmies()) && game.getMaxDefendDice() == 2) {
@@ -1789,9 +1751,8 @@ public class AIDomination extends AISubmissive {
         }
         return collateral;
     }
-    private Object[] checkFor(List<Country> t,Map<Country,AttackTarget> targets, GameState gameState, boolean attack,List<Country> borders,int best,
+    private void checkFor(List<Country> t,Map<Country,AttackTarget> targets, GameState gameState, boolean attack,List<Country> borders,int best,
                               List<Country> attackable) {
-        Object[] obj = new Object[3];
         int size = t.size();
         for (int j = 0; j < size; j++) {
             Country target = t.get(j);
@@ -1799,20 +1760,9 @@ public class AIDomination extends AISubmissive {
             int route = findBestRoute(attackable, gameState, attack, null, attackTarget, gameState.orderedPlayers.get(0).p, targets);
             Country attackFrom = attackable.get(route);
             int cost = attackFrom.getArmies() - attackTarget.routeRemaining[route];
-            cost = createCost(borders,attackFrom);
-            obj = createCostOther(cost,best,route,attackTarget);
-
+            createCost(borders,attackFrom);
+            createCostOther(cost,best,route,attackTarget);
         }
-        return obj;
-    }
-    private Object[] createCostOther(int cost, int best, int route,AttackTarget attackTarget) {
-        Object[] obj = new Object[3];
-        if (cost < best || (cost == best && r.nextBoolean())) {
-            obj[1] = cost;
-            obj[2] = route;
-            obj[3] = attackTarget;
-        }
-        return obj;
     }
     private int createCost(List<Country> borders,Country attackFrom) {
         int cost = 0;
@@ -1847,9 +1797,168 @@ public class AIDomination extends AISubmissive {
      * Determine if elimination is possible.  Rather than performing a more
      * advanced combinatorial search, this planning takes simple heuristic passes
      */
-    protected String eliminate(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState, boolean attack, int remaining, Set<Country> allCountriesTaken, EliminationTarget et, boolean shouldEndAttack, boolean lowProbability) {
+    protected String eliminate(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState,
+                               boolean attack, int remaining, Set<Country> allCountriesTaken, EliminationTarget et,
+                               boolean shouldEndAttack, boolean lowProbability) {
         AttackTarget selection = null;
         int bestRoute = 0;
+        String s = null;
+        s = getPlaced(targets,shouldEndAttack,attack,gameState,bestRoute,et,attackable);
+        //otherwise we use more logic to plan a more complete attack
+        //we start with the targets from easiest to hardest and build up the attack paths from there
+        Set<Country> countriesTaken = new HashSet<Country>(allCountriesTaken);
+        Set<Country> placements = new HashSet<Country>();
+        int bestCost = Integer.MAX_VALUE;
+        Collections.sort(et.attackTargets, Collections.reverseOrder());
+        HashSet<Country> toTake = new HashSet<Country>();
+        toTakeAdd(et,allCountriesTaken,toTake);
+        for (int i = 0; i < et.attackTargets.size() && !toTake.isEmpty(); i++) {
+            AttackTarget attackTarget = et.attackTargets.get(i);
+            Country attackFrom = null;
+            int route = 0;
+            boolean clone = true;
+            Set<Country> path = null;
+            int pathRemaining = 0;
+            boolean closeWhile = true;
+            while (closeWhile) {
+                route = findBestRoute(attackable, gameState, attack, null, attackTarget, et.ps.p, targets);
+                anotherCheck(remaining,attack,gameState,attackTarget,toTake,countriesTaken,route,lowProbability,et,targets,path,attackFrom,placements,
+                        pathRemaining,attackable);
+                checkClone(attackTarget,clone);
+                attackTarget.routeRemaining[route] = Integer.MIN_VALUE;
+            }
+            //process the path found and update the countries take and what to take
+           removeToTake(toTake,countriesTaken,path);
+            nested(pathRemaining,remaining,selection,attackFrom,attack,attackTarget,bestCost,route);
+            placements.add(attackFrom);
+        }
+        Country attackFrom = attackable.get(bestRoute);
+        String result = getMove(targets, attack, selection, bestRoute, attackFrom);
+        if (result != null) {
+            allCountriesTaken.addAll(countriesTaken);
+        }
+        return result;
+    }
+    private String anotherCheck(int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
+                              HashSet<Country> toTake,Set<Country> countriesTaken,int route, boolean lowProbability,
+                              EliminationTarget et,Map<Country,AttackTarget> targets,Set<Country> path,Country attackFrom,Set<Country> placements,
+                                int pathRemaining,List<Country> attackable) {
+        String s = null;
+        if (route == -1) {
+            s = null;
+        }
+        attackFrom = attackable.get(route);
+        if (!placements.contains(attackFrom)) {
+            pathRemaining = attackTarget.routeRemaining[route];
+            attackA(pathRemaining,remaining,attack,gameState,attackTarget,toTake,countriesTaken,route,lowProbability,et,targets,path,attackFrom);
+        }
+        return s;
+    }
+    private void toTakeAdd(EliminationTarget et,Set<Country> allCountriesTaken,HashSet<Country> toTake) {
+        for (int i = 0; i < et.attackTargets.size(); i++) {
+            AttackTarget at = et.attackTargets.get(i);
+            if (!allCountriesTaken.contains(at.targetCountry)) {
+                toTake.add(at.targetCountry);
+            }
+        }
+    }
+    private void checkClone(AttackTarget attackTarget,boolean clone) {
+        if (clone) {
+            //clone the attack target so that the find best route logic can have a path excluded
+            attackTarget = attackTarget.clone();
+            attackTarget.routeRemaining = ArraysCopyOf(attackTarget.routeRemaining, attackTarget.routeRemaining.length);
+            clone = false;
+        }
+    }
+    private void attackA(int pathRemaining, int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
+                         HashSet<Country> toTake,Set<Country> countriesTaken,int route, boolean lowProbability,
+                         EliminationTarget et,Map<Country,AttackTarget> targets,Set<Country> path,Country attackFrom) {
+        if ((pathRemaining + remaining >= 1
+                || (attackTarget.remaining + remaining >= 2 && attackFrom.getArmies() + remaining >= 4))
+                && (et.allOrNone || isGoodIdea(gameState, targets, route, attackTarget, attackFrom, et, attack))) {
+            //TODO this is a choice point if there is more than 1 valid path
+            path = getPath(attackTarget, targets, route, attackFrom);
+            //check to see if this path is good
+            if (Collections.disjoint(path, countriesTaken)) {
+                //check to see if we can append this path with a nearest neighbor path
+                pathRem(pathRemaining,remaining,attack,gameState,attackTarget,toTake,countriesTaken,path,route,lowProbability);
+            }
+        } else if (attackAllIn(et) && checkIfUWhant(attackTarget,remaining,gameState)) {
+            //allow hard players to always pursue a single country elimination
+            path = getPath(attackTarget, targets, route, attackFrom);
+        }
+    }
+    private void pathRem(int pathRemaining, int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
+                         HashSet<Country> toTake,Set<Country> countriesTaken,Set<Country> path, int route, boolean lowProbability) {
+        while (pathRemaining + remaining >= 3) {
+            HashSet<Country> exclusions = new HashSet<Country>(countriesTaken);
+            exclusions.addAll(path);
+            Map<Country, AttackTarget> newTargets = new HashMap<Country, AttackTarget>();
+            searchTargets(newTargets, attackTarget.targetCountry, pathRemaining, 0, 1, remaining,
+                    lowProbability?true:attack, toTake, exclusions, gameState);
+            //find the best fit new path if one exists
+            AttackTarget newTarget = null;
+            attackTarget(pathRemaining,remaining,newTargets,toTake);
+            validNewTarget(newTarget,path,newTargets,attackTarget,route,pathRemaining);
+        }
+    }
+    private boolean checkIfUWhant(AttackTarget attackTarget,int remaining, GameState gameState) {
+        boolean check = false;
+        if(attackTarget.remaining + remaining > -attackTarget.targetCountry.getArmies()
+                && gameState.me.playerValue < gameState.orderedPlayers.get(0).playerValue)
+            check = true;
+        return check;
+    }
+    private boolean attackAllIn(EliminationTarget et) {
+        boolean check = false;
+        if(et.allOrNone && et.attackTargets.size() == 1
+                && type == PLAYER_AI_HARD)
+            check = true;
+        return check;
+    }
+    private void validNewTarget(AttackTarget newTarget,Set<Country> path,Map<Country, AttackTarget> newTargets,
+                                AttackTarget attackTarget, int route, int pathRemaining) {
+        while (newTarget != null) {
+            path.addAll(getPath(newTarget, newTargets, 0, attackTarget.targetCountry));
+            attackTarget.routeRemaining[route] = pathRemaining;
+            break;
+        }
+    }
+    private void nested(int pathRemaining, int remaining,AttackTarget selection,Country attackFrom,boolean attack,AttackTarget attackTarget, int bestCost,
+                        int route) {
+        if (pathRemaining < 1) {
+            remaining += pathRemaining -1;
+        }
+        int cost = attackFrom.getArmies() - pathRemaining;
+        if (selection == null || (attack && cost < bestCost && cost > 0)) {
+            selection = attackTarget;
+            bestCost = cost;
+            int bestRoute = route;
+        }
+    }
+    private void attackTarget(int pathRemaining,int remaining,Map<Country, AttackTarget> newTargets,HashSet<Country> toTake) {
+        for (Iterator<AttackTarget> j = newTargets.values().iterator(); j.hasNext();) {
+            AttackTarget next = j.next();
+            while(toTake.contains(next.targetCountry)
+                    && next.routeRemaining[0] < pathRemaining
+                    && next.routeRemaining[0] + remaining >= 1) {
+                pathRemaining = next.routeRemaining[0];
+                AttackTarget newTarget = next;
+                break;
+            }
+        }
+    }
+    private void removeToTake(HashSet<Country> toTake,Set<Country> countriesTaken,Set<Country> path) {
+        for (Iterator<Country> j = path.iterator(); j.hasNext();) {
+            Country c = j.next();
+            countriesTaken.add(c);
+            toTake.remove(c);
+        }
+    }
+    private String getPlaced(Map<Country,AttackTarget> targets, boolean shouldEndAttack, boolean attack,GameState gameState,
+                             int bestRoute, EliminationTarget et,List<Country> attackable) {
+        String s = null;
+        AttackTarget selection = null;
         if (type == PLAYER_AI_EASY || (type == PLAYER_AI_AVERAGE && !et.allOrNone && r.nextInt(3) != 0) ||
                 (!et.allOrNone && !et.target && shouldEndAttack && attack)) {
             //just be greedy, take the best (least costly) attack first
@@ -1865,118 +1974,10 @@ public class AIDomination extends AISubmissive {
                     bestRoute = route;
                 }
             }
-            return getMove(targets, attack, selection, bestRoute, attackable.get(bestRoute));
+            s = getMove(targets, attack, selection, bestRoute, attackable.get(bestRoute));
         }
-        //otherwise we use more logic to plan a more complete attack
-        //we start with the targets from easiest to hardest and build up the attack paths from there
-        Set<Country> countriesTaken = new HashSet<Country>(allCountriesTaken);
-        Set<Country> placements = new HashSet<Country>();
-        int bestCost = Integer.MAX_VALUE;
-        Collections.sort(et.attackTargets, Collections.reverseOrder());
-        HashSet<Country> toTake = new HashSet<Country>();
-        for (int i = 0; i < et.attackTargets.size(); i++) {
-            AttackTarget at = et.attackTargets.get(i);
-            if (!allCountriesTaken.contains(at.targetCountry)) {
-                toTake.add(at.targetCountry);
-            }
-        }
-        for (int i = 0; i < et.attackTargets.size() && !toTake.isEmpty(); i++) {
-            AttackTarget attackTarget = et.attackTargets.get(i);
-            if (!toTake.contains(attackTarget.targetCountry)) {
-                continue;
-            }
-            Country attackFrom = null;
-            int route = 0;
-            boolean clone = true;
-            Set<Country> path = null;
-            int pathRemaining;
-            while (true) {
-                route = findBestRoute(attackable, gameState, attack, null, attackTarget, et.ps.p, targets);
-                if (route == -1) {
-                    if (!et.allOrNone) {
-                        continue;
-                    }
-                    return null;
-                }
-                attackFrom = attackable.get(route);
-                if (!placements.contains(attackFrom)) {
-                    pathRemaining = attackTarget.routeRemaining[route];
-                    if ((pathRemaining + remaining >= 1 //valid single path
-                            || (attackTarget.remaining + remaining >= 2 && attackFrom.getArmies() + remaining >= 4)) //valid combination
-                            && (et.allOrNone || isGoodIdea(gameState, targets, route, attackTarget, attackFrom, et, attack))) {
-                        //TODO this is a choice point if there is more than 1 valid path
-                        path = getPath(attackTarget, targets, route, attackFrom);
-                        //check to see if this path is good
-                        if (Collections.disjoint(path, countriesTaken)) {
-                            //check to see if we can append this path with a nearest neighbor path
-                            while (pathRemaining + remaining >= 3) {
-                                HashSet<Country> exclusions = new HashSet<Country>(countriesTaken);
-                                exclusions.addAll(path);
-                                Map<Country, AttackTarget> newTargets = new HashMap<Country, AttackTarget>();
-                                searchTargets(newTargets, attackTarget.targetCountry, pathRemaining, 0, 1, remaining,
-                                        lowProbability?true:attack, toTake, exclusions, gameState);
-                                //find the best fit new path if one exists
-                                AttackTarget newTarget = null;
-                                for (Iterator<AttackTarget> j = newTargets.values().iterator(); j.hasNext();) {
-                                    AttackTarget next = j.next();
-                                    while(toTake.contains(next.targetCountry)
-                                            && next.routeRemaining[0] < pathRemaining
-                                            && next.routeRemaining[0] + remaining >= 1) {
-                                        pathRemaining = next.routeRemaining[0];
-                                        newTarget = next;
-                                        break;
-                                    }
-                                }
-                                while (newTarget != null) {
-                                    path.addAll(getPath(newTarget, newTargets, 0, attackTarget.targetCountry));
-                                    attackTarget.routeRemaining[route] = pathRemaining;
-                                    break;
-                                }
-                            }
-                            break; //a good path, continue with planning
-                        }
-                    } else if (et.allOrNone && et.attackTargets.size() == 1
-                            && type == PLAYER_AI_HARD
-                            && attackTarget.remaining + remaining > -attackTarget.targetCountry.getArmies()
-                            && gameState.me.playerValue < gameState.orderedPlayers.get(0).playerValue) {
-                        //allow hard players to always pursue a single country elimination
-                        path = getPath(attackTarget, targets, route, attackFrom);
-                        break;
-                    }
-                }
-                if (clone) {
-                    //clone the attack target so that the find best route logic can have a path excluded
-                    attackTarget = attackTarget.clone();
-                    attackTarget.routeRemaining = ArraysCopyOf(attackTarget.routeRemaining, attackTarget.routeRemaining.length);
-                    clone = false;
-                }
-                attackTarget.routeRemaining[route] = Integer.MIN_VALUE;
-            }
-            //process the path found and update the countries take and what to take
-            for (Iterator<Country> j = path.iterator(); j.hasNext();) {
-                Country c = j.next();
-                countriesTaken.add(c);
-                toTake.remove(c);
-            }
-            if (pathRemaining < 1) {
-                remaining += pathRemaining -1;
-            }
-            int cost = attackFrom.getArmies() - pathRemaining;
-            if (selection == null || (attack && cost < bestCost && cost > 0)) {
-                selection = attackTarget;
-                bestCost = cost;
-                bestRoute = route;
-            }
-            placements.add(attackFrom);
-        }
-        Country attackFrom = attackable.get(bestRoute);
-        String result = getMove(targets, attack, selection, bestRoute, attackFrom);
-        if (result != null) {
-            allCountriesTaken.addAll(countriesTaken);
-        }
-        return result;
+        return s;
     }
-
     /**
      * @see Arrays#copyOf(int[], int)
      */
