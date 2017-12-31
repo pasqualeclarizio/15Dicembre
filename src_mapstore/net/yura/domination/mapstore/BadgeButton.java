@@ -30,7 +30,11 @@ public class BadgeButton extends RadioButton implements Observer {
 
         setHorizontalAlignment(Graphics.HCENTER);
     }
-
+    
+    /**
+     * paint
+     * @param g
+     */
     public void paint(Graphics2D g) {
         super.paint(g);
         
