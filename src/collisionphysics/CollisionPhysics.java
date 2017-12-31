@@ -1,26 +1,10 @@
 package collisionphysics;
 
 /**
- * This class provides static methods for collision detection and 
- * responses, based on Netwon's physics.
- * It is modeled after java.lang.Math.
- * 
- * The collision detection is based on ray tracing and vector analysis.
- * In all situations, we try to compute the parameter t (collision time),
- * and accept the minimum t, such that, 0 < t <= detectionTimeLimit.
- * 
- * In a complex system (e.g., many bouncing balls), only the first collision
- * matters. Hence, we need to find the earliest (smallest) t among all the
- * detected collisions.
+ * This class provides static methods 3D support
+ * @author Il23
  *
- * @author Hock-Chuan Chua
- * @version 0.3 (30 October 2010)
  */
- /* 
-  * TODO: 3D support
-  * TODO: Error Analysis and Test cases
-  * TODO: assert in public methods
-  */
 public class CollisionPhysics {
 
    // Working copy for computing response in intersect(ContainerBox box), 
