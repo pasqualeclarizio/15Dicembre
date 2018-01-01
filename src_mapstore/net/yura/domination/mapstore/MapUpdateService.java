@@ -27,7 +27,7 @@ public class MapUpdateService extends Observable {
 
     static final Logger logger = Logger.getLogger(MapUpdateService.class.getName());
     
-    static MapUpdateService updateService;
+    static MapUpdateService updateService = 0;
     
     /**
      * Costant about List for Generics Variabiles applied

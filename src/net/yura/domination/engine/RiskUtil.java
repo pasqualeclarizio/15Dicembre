@@ -64,7 +64,7 @@ public class RiskUtil {
     /**
      * RiskIO streamOpener
      */
-    public static RiskIO streamOpener;
+    public static RiskIO streamOpener = 0;
 
     static {
 
