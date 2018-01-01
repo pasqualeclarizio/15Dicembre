@@ -32,7 +32,7 @@ public class BadgeButton extends RadioButton implements Observer {
     }
     
     /**
-     * paint
+     *//
      * @param g
      */
     public void paint(Graphics2D g) {
