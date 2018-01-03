@@ -247,18 +247,6 @@ public class AIDomination extends AISubmissive {
         }
         return diff;
     }
-    private String checkFallback(Country fallback, Country overload, int additional, List<Country> copy) {
-        String getPlace = null;
-        if(fallback == null) {
-            if (overload != null) {
-                getPlace = getPlaceCommand(overload, additional);
-            }
-            getPlace = getPlaceCommand(randomCountry(copy), player.getExtraArmies());
-        }
-        else
-            getPlace = getPlaceCommand(fallback, additional);
-        return getPlace;
-    }
     /**
      * ai looks at all the continents and tries to see which one it should place on
      * first it simply looks at the troops on each continent
@@ -311,13 +299,6 @@ public class AIDomination extends AISubmissive {
         checkPlace(toPlace);
         getPlace = getPlaceCommand(toPlace, 1);
         return getPlace;
-    }
-    private void Ow_Z(Player inp, Player otherOwner) {
-        if (inp == player || otherOwner != inp && r.nextBoolean()) {
-            boolean hasPlacement = true;
-        } else if (otherOwner == null) {
-            otherOwner = inp;
-        }
     }
     private String checkTypePlacement(boolean hasPlacement, Country preferedCountry) {
         String s = null;
@@ -580,16 +561,9 @@ public class AIDomination extends AISubmissive {
         }
         return isCheck;
     }
-    private boolean iShuG(boolean bI, GameState rH) {
+    private boolean isCheckedCC17(boolean attack, GameState eTg1) {
         boolean isChecked = false;
-        if((!bI && (rH.breakOnlyTargets || rH.me.defenseValue >
-                rH.orderedPlayers.get(0).attackValue)))
-            isChecked = true;
-        return isChecked;
-    }
-    private boolean isCheckedCC17(boolean attack, GameState gameState) {
-        boolean isChecked = false;
-        if(!attack || gameState.commonThreat != null)
+        if(!attack || eTg1.commonThreat != null)
             isChecked = true;
         return isChecked;
     }
@@ -599,17 +573,17 @@ public class AIDomination extends AISubmissive {
             isChecked = true;
         return isChecked;
     }
-    private void azTa(int tC,List<EliminationTarget> continents,boolean pA,List<Country> attackable,boolean Ko,
-                                GameState gameState,boolean shouldEndAttack,Map<Country, AttackTarget> targets,Set<Country> allCountriesTaken, int extra) {
+    private void azTa(int tC,List<EliminationTarget> cs1,boolean pA,List<Country> abl1,boolean Ko,
+                                GameState eSt1,boolean sCk1,Map<Country, AttackTarget> stg1,Set<Country> CTa1, int eb1) {
         for (int i = 0; i < tC; i++) {
-            String result = liRemaing(attackable, targets, gameState, Ko, extra, allCountriesTaken,
-                    continents.get(i), shouldEndAttack, false);
-            REtO(i,continents,pA,attackable,Ko,gameState,result,targets,allCountriesTaken);
+            String result = liRemaing(abl1, stg1, eSt1, Ko, eb1, CTa1,
+                    cs1.get(i), sCk1, false);
+            REtO(i,cs1,pA,abl1,Ko,eSt1,result,stg1,CTa1);
         }
         if (!Ko) {
             AttackTarget min = null;
-            deleteThisCC9(allCountriesTaken,min,continents,tC);
-            deleteThisCC10(min,gameState,Ko,targets,attackable);
+            deleteThisCC9(CTa1,min,cs1,tC);
+            deleteThisCC10(min,eSt1,Ko,stg1,abl1);
         }
     }
     private String REtO(int i,List<EliminationTarget> con,boolean tG,List<Country> attackable,boolean fz,
@@ -622,11 +596,11 @@ public class AIDomination extends AISubmissive {
         }
     }
     private String z_byPz(int i, List<EliminationTarget> ck,boolean k,GameState m,
-                                  Map<Country, AttackTarget> targets,List<Country> attackable, boolean pressAttack) {
+                                  Map<Country, AttackTarget> tC,List<Country> Elu, boolean pAv) {
         String s = null;
         if (ensuRisk(ck.get(i).co,
-                k, attackable, m,
-                targets, pressAttack, ck)) {
+                k, Elu, m,
+                tC, pAv, ck)) {
             //fortify proactively
             List<Country> border = new ArrayList<Country>();
             for (Country c : (List<Country>)ck.get(i).co.getBorderCountries()) {
@@ -636,7 +610,7 @@ public class AIDomination extends AISubmissive {
                     break;
                 }
             }
-            String placement = fortify(m, attackable, false, border);
+            String placement = fortify(m, Elu, false, border);
             while (placement != null) {
                 s = placement;
             }
@@ -681,19 +655,6 @@ public class AIDomination extends AISubmissive {
             }
         }
     }
-    private String kRec_Po(boolean ik, GameState gv,List<Country> ble,boolean hy,Map<Country, AttackTarget> targets,
-                                 List<Country> v) {
-        String s = null;
-        if (ik) {
-            return la_AttcBoo(ik, ble, gv, targets, hy, v);
-        }
-
-        String result = fortify(gv, ble, false, v);
-        if (result != null) {
-            s = result;
-        }
-        return s;
-    }
     private String deleteThisCC7(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                  boolean attack,Map<Country, AttackTarget> targets,List<EliminationTarget> continents) {
         String s = null;
@@ -723,12 +684,12 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String k_CopY(GameState sg,List<Country> b, int c,Set<Country> allCountriesTaken,
+    private String k_CopY(GameState sg,List<Country> b, int c,Set<Country> En1,
                                  boolean u ,Map<Country, AttackTarget> st, boolean pko,List<EliminationTarget> j,
-                                 boolean cu, boolean shouldEndAttack) {
+                                 boolean cu, boolean CkU1) {
         String s = null;
-        gCoKM(u,allCountriesTaken,pko,shouldEndAttack,sg,b,st,j);
-        s = YPo_gb(sg,b,c,allCountriesTaken,u,st,pko,j,cu);
+        gCoKM(u,En1,pko,CkU1,sg,b,st,j);
+        s = YPo_gb(sg,b,c,En1,u,st,pko,j,cu);
         if (fj_Rt(pko,u) || (tUjk_Ko(cu) && tUjk_Ko(cu))) {
             String result = breakContinent(b, st, sg, u, pko, v);
             while(result != null) {
@@ -742,18 +703,6 @@ public class AIDomination extends AISubmissive {
         if(pl || (type != PLAYER_AI_HARD && xb))
             isCheck = true;
         return isCheck;
-    }
-    private boolean Kpol(boolean tg) {
-        boolean isChecked = false;
-        if(type == PLAYER_AI_HARD && !tg)
-            isChecked = true;
-        return isChecked;
-    }
-    private boolean isCheckedCC4(GameState gameState, boolean attack,List<EliminationTarget> continents) {
-        boolean isChecked = false;
-        if((player.getMission() != null || !gameState.me.owned.isEmpty() || continents.isEmpty() || attack))
-            isChecked = true;
-        return isChecked;
     }
     private String gCoKM(boolean hj,Set<Country> tak,boolean plx, boolean xu,
                                   GameState gs,List<Country> attK,Map<Country,AttackTarget> targets,List<EliminationTarget> boi) {
@@ -780,379 +729,83 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String YPo_gb(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
-                                 boolean attack,Map<Country, AttackTarget> targets, boolean pressAttack,List<EliminationTarget> continents,
-                                 boolean isTooWeak) {
+    private String YPo_gb(GameState eTc1,List<Country> blf, int extra,Set<Country> Tb1,
+                                 boolean atZ,Map<Country, AttackTarget> tgz, boolean pAk,List<EliminationTarget> cz1,
+                                 boolean iK1) {
         String s = null;
-        JPool(gameState,isTooWeak,attackable,targets,attack,pressAttack);
+        JPool(eTc1,iK1,blf,tgz,atZ,pAk);
 
-        if (!attack && (gameState.orderedPlayers.size() > 1 || player.getCapital() != null ||
+        if (!atZ && (eTc1.orderedPlayers.size() > 1 || player.getCapital() != null ||
                 player.getMission() != null || game.getMaxDefendDice() > 2)) {
-            String result = fortify(gameState, attackable, true, v);
-            s = attGametar(result,gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents);
+            String result = fortify(eTc1, blf, true, v);
+            s = attGametar(result,eTc1,blf,extra,Tb1,atZ,tgz,pAk,cz1);
         }
         return s;
     }
-    private String elYH_ji(GameState gameState,List<EliminationTarget> toEliminate,boolean shouldEndAttack,
-                                  Map<Country, AttackTarget> targets,boolean attack, List<Country> attackable, int extra,Set<Country> allCountriesTaken) {
+    private String elYH_ji(GameState eT1,List<EliminationTarget> nTe,boolean sAk,
+                                  Map<Country, AttackTarget> tc1,boolean az1, List<Country> bl1, int extra,Set<Country> aHv1) {
         String s = null;
-        int size = toEliminate.size();
+        int size = nTe.size();
         for (int i = 0; i < size; i++) {
-            EliminationTarget et = toEliminate.get(i);
+            EliminationTarget et = nTe.get(i);
             //don't pursue eliminations that will weaken us too much
             int totalCards = player.getCards().size() + et.ps.p.getCards().size();
             boolean check1 = (type == PLAYER_AI_HARD
-                    && gameState.orderedPlayers.size() > 1);
-            boolean check2 = gameState.me.playerValue < gameState.orderedPlayers.get(0).playerValue
-                    && shouldEndAttack;
-            boolean check3 = et.ps.armies > gameState.me.armies*.4;
+                    && eT1.orderedPlayers.size() > 1);
+            boolean check2 = eT1.me.playerValue < eT1.orderedPlayers.get(0).playerValue
+                    && sAk;
+            boolean check3 = et.ps.armies > eT1.me.armies*.4;
             int check4 = et.ps.armies - getCardEstimate(et.ps.p.getCards().size());
             int check5 = getCardEstimate(player.getCards().size() + et.ps.p.getCards().size());
-            double check6 = (totalCards>RiskGame.MAX_CARDS?1:(gameState.me.playerValue/gameState.orderedPlayers.get(0).playerValue));
+            double check6 = (totalCards>RiskGame.MAX_CARDS?1:(eT1.me.playerValue/eT1.orderedPlayers.get(0).playerValue));
             if (check1 && check2 && check3 && check4 > check6 * check5) {
-                toEliminate.remove(i--);
+                nTe.remove(i--);
                 continue;
             }
-            fIO_bu(et,gameState,toEliminate,extra,attack,targets,shouldEndAttack,allCountriesTaken,attackable);
+            fIO_bu(et,eT1,nTe,extra,az1,tc1,sAk,aHv1,bl1);
         }
         return s;
     }
-    private String fIO_bu(EliminationTarget et,GameState gameState,List<EliminationTarget> toEliminate,int extra,boolean attack,
-                                  Map<Country,AttackTarget> targets,boolean shouldEndAttack,Set<Country> allCountriesTaken,List<Country> attackable) {
+    private String fIO_bu(EliminationTarget et,GameState Stg,List<EliminationTarget> nT1,int extra,boolean ck1,
+                                  Map<Country,AttackTarget> tK1,boolean sAh1,Set<Country> aTkn,List<Country> aTn) {
         String s = null;
         if ((et.ps.p.getCards().isEmpty() &&
-                gameState.orderedPlayers.get(0).playerValue > .7*gameState.me.playerValue)
+                Stg.orderedPlayers.get(0).playerValue > .7*Stg.me.playerValue)
                 || (et.ps.p.getCards().size() > 2 && player.getCards().size() + et.ps.p.getCards().size()
                 <= RiskGame.MAX_CARDS)) {
             //don't consider in a second pass
-            toEliminate.remove(i--);
+            nT1.remove(i--);
         }
-        String result = liRemaing(attackable, targets, gameState, attack, extra, allCountriesTaken, et,
-                shouldEndAttack, false);
+        String result = liRemaing(aTn, tK1, Stg, ck1, extra, aTkn, et,
+                sAh1, false);
         if (result != null) {
             eliminating = true;
             s = result;
         }
         return s;
     }
-    private String hTOz_p(List<EliminationTarget> toEliminate,HashMap<Country, AttackTarget> newTargets,List<Country> attackable,
-                                GameState gameState,boolean attack,Set<Country> allCountriesTaken,int extra,boolean shouldEndAttack) {
-        String s = null;
-        int size = toEliminate.size();
-        for (int i = 0; i < size; i++) {
-            EliminationTarget et = toEliminate.get(i);
-            //reset the old targets - the new ones contain the new remaining estimates
-            int size2 = et.attackTargets.size();
-            for (int j = 0; j < size2; j++) {
-                AttackTarget newTarget = newTargets.get(et.attackTargets.get(j).targetCountry);
-                et.attackTargets.set(j, newTarget);
-            }
-            String result = liRemaing(attackable, newTargets, gameState, attack, extra, allCountriesTaken, et, shouldEndAttack, true);
-            while(result != null) {
-                eliminating = true;
-                s = result;
-            }
-        }
-        return s;
-    }
-    private String yXr_plo(List<EliminationTarget> toEliminate,List<Country> attackable,
-                                 GameState gameState,boolean attack,Set<Country> allCountriesTaken,int extra,boolean shouldEndAttack,
-                                 Map<Country, AttackTarget> targets) {
-        String s = null;
-        if (!attack) {
-            //redo the target search using low probability
-            HashMap<Country, AttackTarget> newTargets = searchAllTargets(true, attackable, gameState);
-            s = hTOz_p(toEliminate,newTargets,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack);
-        } else if (isIncreasingSet()){
-            //try to pursue the weakest player
-            EliminationTarget et = toEliminate.get(0);
-            et.allOrNone = false;
-            String result = liRemaing(attackable, targets, gameState, attack, extra, allCountriesTaken,
-                    et, shouldEndAttack, true);
-            while(result != null) {
-                s = result;
-            }
-        }
-        return s;
-    }
-    private String pkBA_b(String result,GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
-                                 boolean attack,Map<Country, AttackTarget> targets, boolean pressAttack,List<EliminationTarget> continents) {
-        String s = null;
-        while(result != null) {
-            //prefer attack to fortification
-            if (!continents.isEmpty() && pressAttack && player.getCapital() == null) {
-                String toAttack = liRemaing(attackable, targets, gameState, attack, extra,
-                        allCountriesTaken, continents.get(0), false, false);
-                while(toAttack != null) {
-                    return toAttack;
-                }
-            }
-            s = result;
-        }
-        return s;
-    }
-    private void gtOh_bx(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
-                                   boolean attack,Map<Country, AttackTarget> targets,boolean shouldEndAttack,List<EliminationTarget> toEliminate) {
+    private void gtOh_bx(GameState gv,List<Country> ae, int extra,Set<Country> enF,
+                                   boolean cKj,Map<Country, AttackTarget> tV,boolean sXt,List<EliminationTarget> tE) {
         boolean check = false;
-        if (type == PLAYER_AI_HARD && gameState.orderedPlayers.size() > 1
-                && (isIncreasingSet() || gameState.me.playerValue > gameState.orderedPlayers.get(0).playerValue)) {
+        if (type == PLAYER_AI_HARD && gv.orderedPlayers.size() > 1
+                && (isIncreasingSet() || gv.me.playerValue > gv.orderedPlayers.get(0).playerValue)) {
             //consider low probability eliminations
-            boolean empt = !toEliminate.isEmpty();
+            boolean empt = !tE.isEmpty();
             while (empt) {
-                listAttTarg(toEliminate,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack,targets);
+                listAttTarg(tE,ae,gv,cKj,enF,extra,sXt,tV);
             }
             //just try to stay in the game
             boolean incr = isIncreasingSet();
-            int defens = gameState.me.defenseValue;
-            int att = (int)gameState.orderedPlayers.get(0).attackValue;
+            int defens = gv.me.defenseValue;
+            int att = (int)gv.orderedPlayers.get(0).attackValue;
             while(incr && defens < att) {
                 check = true;
             }
         }
     }
-    protected String reIP_h(boolean attack, List<Country> attackable,
-                                   GameState gameState, Map<Country, AttackTarget> targets,
-                                   Set<Country> allCountriesTaken, boolean pressAttack, boolean shouldEndAttack, boolean highProbability) {
-        return null;
-    }
-
-    protected boolean zpER_hy(Continent c, boolean attack,
-                                               List<Country> attackable, GameState gameState,
-                                               Map<Country, AttackTarget> targets, boolean pressAttack,
-                                               List<EliminationTarget> continents) {
-        return type == PLAYER_AI_HARD && !isIncreasingSet() && eliminating
-                && gameState.commonThreat == null && !attack && riBooTar(attackable, gameState, targets, pressAttack, continents)==null;
-    }
 
     protected boolean isIncreasingSet() {
         return game.getCardMode() == RiskGame.CARD_INCREASING_SET && (type != PLAYER_AI_HARD || game.getNewCardState() > 12) && (!game.getCards().isEmpty() || game.isRecycleCards());
-    }
-
-    private void target_null() {
-        int route = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
-        if (target == null || gameState.targetPlayers.contains(at.targetCountry.getOwner()) || r.nextBoolean()) {
-            bestRoute = route;
-            target = at;
-        }
-    }
-
-    private void attack_target() {
-
-        boolean  target = (target != null && at.remaining < target.remaining);
-        boolean remaining =(at.remaining > 0);
-
-
-        AttackTarget at = attacks.get(i);
-        if (target  || remaining) {
-            break;
-        }
-        if (found) {
-            continue;
-        }
-        if (continents.size() > 0 && at.targetCountry.getContinent() == continents.get(0).co) {
-            bestRoute = findBestRoute(attackable, gameState, pressAttack, null, at, game.getSetupDone()?(Player) gameState.targetPlayers.get(0):null, targets);
-            target = at;
-            found = true;
-        } else {
-            target_null();
-        }
-    }
-    private String lkBy_g(List<Country> attackable, GameState gameState,
-                                  Map<Country, AttackTarget> targets, boolean pressAttack, List<EliminationTarget> continents) {
-        if (this.type == AIDomination.PLAYER_AI_EASY) {
-            return null;
-        }
-        List<AttackTarget> attacks = new ArrayList<AttackTarget>(targets.values());
-        Collections.sort(attacks);
-        AttackTarget target = null;
-        boolean found = false;
-        int bestRoute = 0;
-        int size = attacks.size() - 1;
-        for (int i = size; i >= 0; i--) {
-            attack_target();
-        }
-        if (target != null) {
-            return getPlaceCommand(attackable.get(bestRoute), -target.remaining + 1);
-        }
-        return null;
-    }
-
-    /**
-     * one last pass looking to get a risk card or reduce forces
-     */
-    private String xy_Uk(boolean attack, List<Country> attackable,
-                               GameState gameState, Map<Country, AttackTarget> targets, boolean shouldEndAttack, List<Country> border) {
-        boolean isTooWeak = isTooWeak(gameState) && gameState.me.defenseValue < .5*gameState.orderedPlayers.get(0).defenseValue;
-        boolean forceReduction = game.isCapturedCountry() || game.getCards().isEmpty() || gameState.me.playerValue > 1.5*gameState.orderedPlayers.get(0).playerValue;
-        List<AttackTarget> sorted = new ArrayList<AttackTarget>(targets.values());
-        Collections.sort(sorted);
-        String s = "endattack";
-        int size = sorted.size() - 1;
-        killThisFor(size,sorted,attackable, gameState, attack,targets,forceReduction,border);
-        if (!isTooWeak && type != PLAYER_AI_EASY) {
-            int size2 = sorted.size();
-            for (int i = 0; i < size2; i++) {
-                AttackTarget target = sorted.get(i);
-                int bestRoute = findBestRoute(attackable, gameState, attack, null, target, gameState.targetPlayers.get(0), targets);
-                Country attackFrom = attackable.get(bestRoute);
-                Country initialAttack = getCountryToAttack(targets, target, bestRoute, attackFrom);
-                boolean isChecked = checkContinue(target, attackable,gameState,attack,targets,border);
-                if(isChecked)
-                    continue;
-                s = at_CountSt(gameState,targets,target,bestRoute,shouldEndAttack,initialAttack,attackFrom);
-            }
-        }
-        return s;
-    }
-    private String Size(Country initialAttack,GameState gameState,
-                                  boolean shouldEndAttack, Map<Country, AttackTarget> targets, int bestRoute,
-                                  AttackTarget target, Country attackFrom) {
-        String s = null;
-        int size = gameState.orderedPlayers.size();
-        for (int j = 0; j < size; j++) {
-            PlayerState ps = gameState.orderedPlayers.get(j);
-            boolean check = plGaMap(ps,initialAttack,gameState,shouldEndAttack,targets,
-                    bestRoute,target,attackFrom);
-            while (check) {
-                s = getAttack(targets, target, bestRoute, attackFrom);
-            }
-        }
-        return s;
-    }
-    private String at_CountSt(GameState gameState,Map<Country,AttackTarget> targets,AttackTarget target, int bestRoute,
-                           boolean shouldEndAttack,Country initialAttack,Country attackFrom) {
-        String s = null;
-        if (gameState.commonThreat != null && gameState.commonThreat.p == initialAttack.getOwner()) {
-            return getAttack(targets, target, bestRoute, attackFrom);
-        } else {
-            s = deleteThis(target,attackFrom,gameState,shouldEndAttack,targets,initialAttack,bestRoute);
-            List<Country> neighbours = attackFrom.getIncomingNeighbours();
-            boolean isTrue = false;
-            if (gameState.orderedPlayers.get(0).playerValue > gameState.me.playerValue && !isTrue) {
-                s = k_AnStaGam(initialAttack,gameState,shouldEndAttack,targets,
-                        bestRoute,target,attackFrom);
-                isTrue = true;
-            }
-            s = getAttack(targets, target, bestRoute, attackFrom);
-        }
-        return s;
-    }
-    private String killThisFor(int size,List<AttackTarget> sorted,List<Country>
-            attackable,GameState gameState,boolean attack,Map<Country,AttackTarget> targets,boolean forceReduction,
-                               List<Country> border) {
-        String s = null;
-        for (int i = size; i >= 0; i--) {
-            AttackTarget target = sorted.get(i);
-            if (target.depth > 1) {
-                break; //we don't want to bother considering anything beyond an initial attack
-            }
-            int bestRoute = findBestRoute(attackable, gameState, attack, null, target, gameState.targetPlayers.get(0), targets);
-            Country attackFrom = attackable.get(bestRoute);
-            Country initialAttack = getCountryToAttack(targets, target, bestRoute, attackFrom);
-            s = fRead(forceReduction,attackFrom,border,initialAttack,gameState,target,targets,bestRoute);
-        }
-        return s;
-    }
-    private boolean plGaMap(PlayerState ps,Country initialAttack,GameState gameState,
-                                      boolean shouldEndAttack, Map<Country, AttackTarget> targets, int bestRoute,
-                                      AttackTarget target, Country attackFrom) {
-
-        boolean check = (check3(ps,initialAttack,gameState) &&
-                (check4(ps,gameState) || shMapTar(shouldEndAttack,gameState,targets,bestRoute,target,attackFrom)));
-        return check;
-    }
-    private boolean check3(PlayerState ps, Country initialAttack, GameState gameState) {
-        boolean check = ps.p == initialAttack.getOwner() && (!gameState.breakOnlyTargets ||
-                gameState.targetPlayers.contains(ps.p));
-        return check;
-    }
-    private boolean shMapTar(boolean shouldEndAttack,GameState gameState, Map<Country, AttackTarget> targets, int bestRoute,
-                           AttackTarget target, Country attackFrom) {
-        boolean check = (!shouldEndAttack && ps_R_Cou(gameState, targets, bestRoute, target,
-                attackFrom, null, shouldEndAttack));
-        return check;
-    }
-    private boolean check4(PlayerState ps, GameState gameState) {
-        boolean check = ps.attackOrder == 1 || gameState.orderedPlayers.size() == 1 ||
-                ps.defenseValue > gameState.me.defenseValue*1.2;
-        return check;
-    }
-    private String fRead(boolean forceReduction,Country attackFrom,List<Country> border,Country initialAttack,
-                         GameState gameState,AttackTarget target,Map<Country, AttackTarget> targets,int bestRoute) {
-        String s = null;
-        if (forceReduction) {
-            s = peepholeBreak(attackFrom,border,initialAttack,gameState,target,targets,bestRoute);
-        } else if (target.remaining >= -(attackFrom.getArmies()/2 + attackFrom.getArmies()%2)) {
-            s = getAttack(targets, target, bestRoute, attackFrom);
-        }
-        return s;
-    }
-    private String deleteThis(AttackTarget target,Country attackFrom,GameState gameState,boolean endAttack,
-                              Map<Country,AttackTarget> targets,Country initialAttack, int bestRoute) {
-        String s = null;
-        boolean check = ((isIncreasingSet() || gameState.me.playerValue <
-                .8*gameState.orderedPlayers.get(0).playerValue)
-                && !ps_R_Cou(gameState, targets, bestRoute, target, attackFrom, null,
-                endAttack));
-        if (ownsNeighbours(initialAttack) && target.remaining > -(attackFrom.getArmies()/2 +
-                attackFrom.getArmies()%2)) {
-            while(check) {
-                break;
-            }
-            return getAttack(targets, target, bestRoute, attackFrom);
-        }
-        return s;
-    }
-    private String peepholeBreak(Country attackFrom,List<Country> border,Country initialAttack,
-                                 GameState gameState,AttackTarget target,Map<Country, AttackTarget> targets,int bestRoute) {
-        String s = null;
-        boolean check = check7(attackFrom,border,initialAttack)
-                && (check8(gameState,initialAttack) || check9(gameState,initialAttack,attackFrom,border) ||
-                check10(attackFrom, target));
-        if (check) {
-            s = getAttack(targets, target, bestRoute, attackFrom);
-        }
-        if (gameState.commonThreat != null && gameState.commonThreat.p == initialAttack.getContinent().getOwner() && target.remaining >= -(attackFrom.getArmies()/2 + attackFrom.getArmies()%2)) {
-            s = getAttack(targets, target, bestRoute, attackFrom);
-        }
-        return s;
-    }
-    private boolean check7(Country attackFrom,List<Country> border,Country initialAttack) {
-        boolean check = (attackFrom.getCrossContinentNeighbours().size() == 1 || !border.contains(attackFrom))
-                && attackFrom.getCrossContinentNeighbours().contains(initialAttack);
-        return check;
-    }
-    private boolean check8(GameState gameState, Country initialAttack) {
-        boolean check = (gameState.commonThreat != null && gameState.commonThreat.p == initialAttack.getOwner()) ||
-                gameState.targetPlayers.contains(initialAttack.getOwner());
-        return check;
-    }
-    private boolean check9(GameState gameState, Country initialAttack, Country attackFrom,List<Country> border) {
-        boolean check = ((gameState.commonThreat == null && !gameState.breakOnlyTargets))
-                && initialAttack.getContinent().getOwner() != null
-                && (!border.contains(attackFrom) || initialAttack.getArmies() == 1);
-        return check;
-    }
-    private boolean check10(Country attackFrom, AttackTarget target) {
-        boolean check =
-                (attackFrom.getArmies() > 3)
-                        && target.remaining >= -(attackFrom.getArmies()/2 + attackFrom.getArmies()%2);
-        return check;
-    }
-    private boolean checkContinue(AttackTarget target,List<Country> attackable,GameState gameState,boolean attack,
-                                  Map<Country,AttackTarget>targets,List<Country> border) {
-        boolean isCotinued = false;
-        int bestRoute = findBestRoute(attackable, gameState, attack, null, target,
-                gameState.targetPlayers.get(0), targets);
-        Country attackFrom = attackable.get(bestRoute);
-        Country initialAttack = getCountryToAttack(targets, target, bestRoute, attackFrom);
-        boolean check = attackFrom.getArmies() < 3 ||
-                (game.getMaxDefendDice() > 2 && initialAttack.getArmies() > 2 && (gameState.me.playerValue < 1.5*gameState.orderedPlayers.get(0).playerValue  || game.isCapturedCountry())) ||
-                (attackFrom.getArmies() < 4 && attackFrom.getArmies() - 1 <= initialAttack.getArmies());
-        if (target.depth > 1 && bestRoute == -1 && border.contains(attackFrom) && initialAttack.getArmies() < 5 && check) {
-            isCotinued = true;
-        }
-        return isCotinued;
     }
     /**
      * Quick check to see if we're significantly weaker than the strongest player
@@ -1796,26 +1449,6 @@ public class AIDomination extends AISubmissive {
         }
         return collateral;
     }
-    private void checkFor(List<Country> t,Map<Country,AttackTarget> targets, GameState gameState, boolean attack,List<Country> borders,int best,
-                              List<Country> attackable) {
-        int size = t.size();
-        for (int j = 0; j < size; j++) {
-            Country target = t.get(j);
-            AttackTarget attackTarget = targets.get(target);
-            int route = findBestRoute(attackable, gameState, attack, null, attackTarget, gameState.orderedPlayers.get(0).p, targets);
-            Country attackFrom = attackable.get(route);
-            int cost = attackFrom.getArmies() - attackTarget.routeRemaining[route];
-            createCost(borders,attackFrom);
-            createCostOther(cost,best,route,attackTarget);
-        }
-    }
-    private int createCost(List<Country> borders,Country attackFrom) {
-        int cost = 0;
-        if (borders.contains(attackFrom)) {
-            cost += game.getMaxDefendDice();
-        }
-        return cost;
-    }
     /**
      * Get a list of continents to break in priority order
      */
@@ -1843,21 +1476,21 @@ public class AIDomination extends AISubmissive {
      * Determine if elimination is possible.  Rather than performing a more
      * advanced combinatorial search, this planning takes simple heuristic passes
      */
-    protected String liRemaing(List<Country> attackable, Map<Country, AttackTarget> targets, GameState gameState,
-                               boolean attack, int remaining, Set<Country> allCountriesTaken, EliminationTarget et,
-                               boolean shouldEndAttack, boolean lowProbability) {
+    protected String liRemaing(List<Country> Le, Map<Country, AttackTarget> fg, GameState xF,
+                               boolean ip, int vTg, Set<Country> aZx, EliminationTarget et,
+                               boolean sGv, boolean lowProbability) {
         AttackTarget selection = null;
         int bestRoute = 0;
         String s = null;
-        s = r_tyTar(targets,shouldEndAttack,attack,gameState,bestRoute,et,attackable);
+        s = r_tyTar(fg,sGv,ip,xF,bestRoute,et,Le);
         //otherwise we use more logic to plan a more complete attack
         //we start with the targets from easiest to hardest and build up the attack paths from there
-        Set<Country> countriesTaken = new HashSet<Country>(allCountriesTaken);
+        Set<Country> countriesTaken = new HashSet<Country>(aZx);
         Set<Country> placements = new HashSet<Country>();
         int bestCost = Integer.MAX_VALUE;
         Collections.sort(et.attackTargets, Collections.reverseOrder());
         HashSet<Country> toTake = new HashSet<Country>();
-        toTakeAdd(et,allCountriesTaken,toTake);
+        toTakeAdd(et,aZx,toTake);
         int size = et.attackTargets.size();
         boolean emp = !toTake.isEmpty();
         for (int i = 0; i < size && emp; i++) {
@@ -1869,36 +1502,36 @@ public class AIDomination extends AISubmissive {
             int pathRemaining = 0;
             boolean closeWhile = true;
             while (closeWhile) {
-                route = findBestRoute(attackable, gameState, attack, null, attackTarget, et.ps.p, targets);
-                co_SelRema(remaining,attack,gameState,attackTarget,toTake,countriesTaken,route,lowProbability,et,targets,path,attackFrom,placements,
-                        pathRemaining,attackable);
+                route = findBestRoute(Le, xF, ip, null, attackTarget, et.ps.p, fg);
+                co_SelRema(vTg,ip,xF,attackTarget,toTake,countriesTaken,route,lowProbability,et,fg,path,attackFrom,placements,
+                        pathRemaining,Le);
                 cl_reRoute(attackTarget,clone);
                 attackTarget.routeRemaining[route] = Integer.MIN_VALUE;
             }
             //process the path found and update the countries take and what to take
            removeToTake(toTake,countriesTaken,path);
-            nested(pathRemaining,remaining,selection,attackFrom,attack,attackTarget,bestCost,route);
+            nested(pathRemaining,vTg,selection,attackFrom,ip,attackTarget,bestCost,route);
             placements.add(attackFrom);
         }
-        Country attackFrom = attackable.get(bestRoute);
-        String result = getMove(targets, attack, selection, bestRoute, attackFrom);
+        Country attackFrom = Le.get(bestRoute);
+        String result = getMove(fg, ip, selection, bestRoute, attackFrom);
         if (result != null) {
-            allCountriesTaken.addAll(countriesTaken);
+            aZx.addAll(countriesTaken);
         }
         return result;
     }
-    private String co_SelRema(int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
-                              HashSet<Country> toTake,Set<Country> countriesTaken,int route, boolean lowProbability,
-                              EliminationTarget et,Map<Country,AttackTarget> targets,Set<Country> path,Country attackFrom,Set<Country> placements,
-                                int pathRemaining,List<Country> attackable) {
+    private String co_SelRema(int kxu,boolean aT,GameState gBh, AttackTarget ik,
+                              HashSet<Country> toTake,Set<Country> zE,int route, boolean hX,
+                              EliminationTarget et,Map<Country,AttackTarget> kN,Set<Country> pT,Country mFr,Set<Country> plG,
+                                int pyIn,List<Country> cV) {
         String s = null;
         if (route == -1) {
             s = null;
         }
-        attackFrom = attackable.get(route);
-        if (!placements.contains(attackFrom)) {
-            pathRemaining = attackTarget.routeRemaining[route];
-            routMapRe(pathRemaining,remaining,attack,gameState,attackTarget,toTake,countriesTaken,route,lowProbability,et,targets,path,attackFrom);
+        mFr = cV.get(route);
+        if (!plG.contains(mFr)) {
+            pyIn = ik.routeRemaining[route];
+            routMapRe(pyIn,kxu,aT,gBh,ik,toTake,zE,route,hX,et,kN,pT,mFr);
         }
         return s;
     }
@@ -1911,67 +1544,60 @@ public class AIDomination extends AISubmissive {
             }
         }
     }
-    private void cl_reRoute(AttackTarget attackTarget,boolean clone) {
-        if (clone) {
+    private void cl_reRoute(AttackTarget tVz,boolean Cl) {
+        if (Cl) {
             //clone the attack target so that the find best route logic can have a path excluded
-            attackTarget = attackTarget.clone();
-            attackTarget.routeRemaining = ArraysCopyOf(attackTarget.routeRemaining, attackTarget.routeRemaining.length);
-            clone = false;
+            tVz = tVz.clone();
+            tVz.routeRemaining = ArraysCopyOf(tVz.routeRemaining, tVz.routeRemaining.length);
+            Cl = false;
         }
     }
-    private void routMapRe(int pathRemaining, int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
-                         HashSet<Country> toTake,Set<Country> countriesTaken,int route, boolean lowProbability,
-                         EliminationTarget et,Map<Country,AttackTarget> targets,Set<Country> path,Country attackFrom) {
-        if (paRemaArmi(pathRemaining,remaining,attackTarget,attackFrom)
-                && checkAnotherPath(gameState,targets,route,et,attack,attackTarget,attackFrom)) {
+    private void routMapRe(int pIfg, int rTin,boolean Apl,GameState bSt, AttackTarget uJk,
+                         HashSet<Country> cPo,Set<Country> cTu,int route, boolean yLk,
+                         EliminationTarget et,Map<Country,AttackTarget> targets,Set<Country> path,Country kBy) {
+        if (paRemaArmi(pIfg,rTin,uJk,kBy)
+                && checkAnotherPath(bSt,targets,route,et,Apl,uJk,kBy)) {
             //TODO this is a choice point if there is more than 1 valid path
-            path = getPath(attackTarget, targets, route, attackFrom);
-            colGTak(pathRemaining,remaining,attack,gameState,attackTarget,toTake,countriesTaken,route,lowProbability,path);
-        } else if (attackAllIn(et) && t_Va(attackTarget,remaining,gameState)) {
+            path = getPath(uJk, targets, route, kBy);
+            colGTak(pIfg,rTin,Apl,bSt,uJk,cPo,cTu,route,yLk,path);
+        } else if (attackAllIn(et) && t_Va(uJk,rTin,bSt)) {
             //allow hard players to always pursue a single country elimination
-            path = getPath(attackTarget, targets, route, attackFrom);
+            path = getPath(uJk, targets, route, kBy);
         }
     }
-    private void colGTak(int pathRemaining, int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
-                              HashSet<Country> toTake,Set<Country> countriesTaken,int route, boolean lowProbability,Set<Country> path) {
-        if (Collections.disjoint(path, countriesTaken)) {
+    private void colGTak(int fx, int rnm,boolean sxc,GameState paz, AttackTarget yv,
+                              HashSet<Country> ttK,Set<Country> vT,int rtth, boolean lPp,Set<Country> path) {
+        if (Collections.disjoint(path, vT)) {
             //check to see if we can append this path with a nearest neighbor path
-            exHaCo_Set(pathRemaining,remaining,attack,gameState,attackTarget,toTake,countriesTaken,path,route,lowProbability);
+            exHaCo_Set(fx,rnm,sxc,paz,yv,ttK,vT,path,rtth,lPp);
         }
     }
-    private boolean isAllNor(GameState gameState,Map<Country,AttackTarget> targets,int route,EliminationTarget et,boolean attack,
-                                     AttackTarget attackTarget,Country attackFrom) {
+    private boolean paRemaArmi(int pin, int rg,AttackTarget ac,Country xy) {
         boolean check = false;
-        if((et.allOrNone || ps_R_Cou(gameState, targets, route, attackTarget, attackFrom, et, attack)))
+        if((pin + rg >= 1
+                || (ac.remaining + rg >= 2 && xy.getArmies() + rg >= 4)))
             check = true;
         return check;
     }
-    private boolean paRemaArmi(int pathRemaining, int remaining,AttackTarget attackTarget,Country attackFrom) {
-        boolean check = false;
-        if((pathRemaining + remaining >= 1
-                || (attackTarget.remaining + remaining >= 2 && attackFrom.getArmies() + remaining >= 4)))
-            check = true;
-        return check;
-    }
-    private void exHaCo_Set(int pathRemaining, int remaining,boolean attack,GameState gameState, AttackTarget attackTarget,
-                         HashSet<Country> toTake,Set<Country> countriesTaken,Set<Country> path, int route, boolean lowProbability) {
-        int sum = pathRemaining + remaining;
+    private void exHaCo_Set(int zs, int r1,boolean l9,GameState x2, AttackTarget th5,
+                         HashSet<Country> toTake,Set<Country> d,Set<Country> ptg, int route, boolean lw) {
+        int sum = zs + r1;
         while (sum >= 3) {
-            HashSet<Country> exclusions = new HashSet<Country>(countriesTaken);
-            exclusions.addAll(path);
+            HashSet<Country> exclusions = new HashSet<Country>(d);
+            exclusions.addAll(ptg);
             Map<Country, AttackTarget> newTargets = new HashMap<Country, AttackTarget>();
-            searchTargets(newTargets, attackTarget.targetCountry, pathRemaining, 0, 1, remaining,
-                    lowProbability?true:attack, toTake, exclusions, gameState);
+            searchTargets(newTargets, th5.targetCountry, zs, 0, 1, r1,
+                    lw?true:l9, toTake, exclusions, x2);
             //find the best fit new path if one exists
             AttackTarget newTarget = null;
-            attackTarget(pathRemaining,remaining,newTargets,toTake);
-            v_AlidS(newTarget,path,newTargets,attackTarget,route,pathRemaining);
+            attackTarget(zs,r1,newTargets,toTake);
+            v_AlidS(newTarget,ptg,newTargets,th5,route,zs);
         }
     }
-    private boolean t_Va(AttackTarget attackTarget,int remaining, GameState gameState) {
+    private boolean t_Va(AttackTarget tKo,int rImn, GameState gMi) {
         boolean check = false;
-        if(attackTarget.remaining + remaining > -attackTarget.targetCountry.getArmies()
-                && gameState.me.playerValue < gameState.orderedPlayers.get(0).playerValue)
+        if(tKo.remaining + rImn > -tKo.targetCountry.getArmies()
+                && gMi.me.playerValue < gMi.orderedPlayers.get(0).playerValue)
             check = true;
         return check;
     }
@@ -1982,24 +1608,12 @@ public class AIDomination extends AISubmissive {
             check = true;
         return check;
     }
-    private void v_AlidS(AttackTarget newTarget,Set<Country> path,Map<Country, AttackTarget> newTargets,
-                                AttackTarget attackTarget, int route, int pathRemaining) {
-        while (newTarget != null) {
-            path.addAll(getPath(newTarget, newTargets, 0, attackTarget.targetCountry));
-            attackTarget.routeRemaining[route] = pathRemaining;
+    private void v_AlidS(AttackTarget ng,Set<Country> path,Map<Country, AttackTarget> tj8,
+                                AttackTarget tj1x, int route, int pH7) {
+        while (ng != null) {
+            path.addAll(getPath(ng, tj8, 0, tj1x.targetCountry));
+            tj1x.routeRemaining[route] = pH7;
             break;
-        }
-    }
-    private void n_CostBe(int pathRemaining, int remaining,AttackTarget selection,Country attackFrom,boolean attack,AttackTarget attackTarget, int bestCost,
-                        int route) {
-        if (pathRemaining < 1) {
-            remaining += pathRemaining -1;
-        }
-        int cost = attackFrom.getArmies() - pathRemaining;
-        if (selection == null || (attack && cost < bestCost && cost > 0)) {
-            selection = attackTarget;
-            bestCost = cost;
-            int bestRoute = route;
         }
     }
     private void attackTarget(int pathRemaining,int remaining,Map<Country, AttackTarget> newTargets,HashSet<Country> toTake) {
@@ -2022,24 +1636,24 @@ public class AIDomination extends AISubmissive {
             toTake.remove(c);
         }
     }
-    private String r_tyTar(Map<Country,AttackTarget> targets, boolean shouldEndAttack, boolean attack,GameState gameState,
-                             int bestRoute, EliminationTarget et,List<Country> attackable) {
+    private String r_tyTar(Map<Country,AttackTarget> tj, boolean hn, boolean Jp,GameState gJ1,
+                             int bestRoute, EliminationTarget et,List<Country> Bl) {
         String s = null;
         AttackTarget selection = null;
         if (type == PLAYER_AI_EASY || (type == PLAYER_AI_AVERAGE && !et.allOrNone && r.nextInt(3) != 0) ||
-                (!et.allOrNone && !et.target && shouldEndAttack && attack)) {
+                (!et.allOrNone && !et.target && hn && Jp)) {
             //just be greedy, take the best (least costly) attack first
             int size = et.attackTargets.size();
             for (int i = 0; i < size; i++) {
                 AttackTarget at = et.attackTargets.get(i);
-                int route = findBestRoute(attackable, gameState, attack, null, at, et.ps.p, targets);
-                Country attackFrom = attackable.get(route);
-                if ((checkRouteRem(at,route,selection,bestRoute) || checkRem(at,gameState,selection,attackFrom,route,targets,et,attack))) {
+                int route = findBestRoute(Bl, gJ1, Jp, null, at, et.ps.p, tj);
+                Country attackFrom = Bl.get(route);
+                if ((checkRouteRem(at,route,selection,bestRoute) || checkRem(at,gJ1,selection,attackFrom,route,tj,et,Jp))) {
                     selection = at;
                     bestRoute = route;
                 }
             }
-            s = getMove(targets, attack, selection, bestRoute, attackable.get(bestRoute));
+            s = getMove(tj, Jp, selection, bestRoute, Bl.get(bestRoute));
         }
         return s;
     }
@@ -2098,41 +1712,9 @@ public class AIDomination extends AISubmissive {
 
     }
 
-    protected void get_mission() {
-        int size = gameState.orderedPlayers.size() - 1;
-        for (int i = size; i >= 0; i--) {
-            PlayerState ps = gameState.orderedPlayers.get(i);
-            if (ps.playerValue >= gameState.me.playerValue) {
-                break;
-            }
-            if (ps.p == c.getOwner()) {
-                boolean owner= get_owner();
-            }
-        }
-    }
-
-    protected void player_mission() {
-
-        if (player.getMission() != null || ((attack|| isIncreasingSet()) && (c.getOwner().getCards().size() > 1 || (c.getOwner().getCards().size() == 1 && game.getCards().isEmpty())))) {
-            get_mission();
-        }
-    }
-
-    protected boolean game_conditons() {
-
-        if (player.getMission() == null && game.getCardMode() == RiskGame.CARD_ITALIANLIKE_SET && c.getOwner().getCards().size() < 4|| gameState.commonThreat != null && c.getOwner().getCards().size() <= 2) {
-            return true;
-        }
-        if (gameState.commonThreat != null && c.getOwner() != gameState.commonThreat.p && c.getContinent().getOwner() != null) {
-            return false;
-        }
-        player_mission();
-
-    }
-
-    protected boolean ps_R_Cou(GameState gameState, Map<Country, AttackTarget> targets, int route, AttackTarget attackTarget, Country attackFrom, EliminationTarget et, boolean attack) {
-        Country c = getCountryToAttack(targets, attackTarget, route, attackFrom);
-        if (gameState.orderedPlayers.size() > 1 && (et == null || et.ps == null || c.getOwner() != et.ps.p) && !gameState.targetPlayers.contains(c.getOwner())) {
+    protected boolean ps_R_Cou(GameState gUb, Map<Country, AttackTarget> zN, int route, AttackTarget uG, Country fgr, EliminationTarget et, boolean v) {
+        Country c = getCountryToAttack(zN, uG, route, fgr);
+        if (gUb.orderedPlayers.size() > 1 && (et == null || et.ps == null || c.getOwner() != et.ps.p) && !gUb.targetPlayers.contains(c.getOwner())) {
             game_conditions();
         }
         return true;
@@ -2919,18 +2501,6 @@ public class AIDomination extends AISubmissive {
          for (int j = 0; j < leng; j++) {
          	attack_update();
          }
-    }
-    
-    public void small_multiplayer() {
-    	ps.defenseValue = 5*noArmies/4 + noArmies%4 + player2.getNoTerritoriesOwned();
-        ps.p = player2;
-        if (i == 0) {
-            g.me = ps;
-        } else {
-            g.orderedPlayers.add(ps);
-        }
-        ps.playerValue += ps.attackValue + ((game.getMaxDefendDice() == 2 && !isIncreasingSet())?1:game.getMaxDefendDice()>2?3:2)*ps.defenseValue;
-        attackOrder++;
     }
     
     public void get_players() {
