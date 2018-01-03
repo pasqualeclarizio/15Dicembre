@@ -130,6 +130,9 @@ public class RiskUtil {
             case RiskGame.MODE_DOMINATION: type = "domination"; break;
             case RiskGame.MODE_CAPITAL: type = "capital"; break;
             case RiskGame.MODE_SECRET_MISSION: type = "mission"; break;
+            default:
+            	System.out.print("ok");
+            	
         }
         int cardsMode = 0;
 
@@ -137,6 +140,8 @@ public class RiskUtil {
             case RiskGame.CARD_INCREASING_SET: type += " increasing"; break;
             case RiskGame.CARD_FIXED_SET: type += " fixed"; break;
             case RiskGame.CARD_ITALIANLIKE_SET: type += " italianlike"; break;
+            default:
+            	System.out.print("ok");
         }
         return null;
 
