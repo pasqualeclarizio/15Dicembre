@@ -5,7 +5,7 @@ package net.yura.domination.engine.ai.logic;
  * @author Il23
  *
  */
-public class AiDominationException extends RuntimeException {
+public class AiDominationException extends Exception {
     public AiDominationException() { }
     public AiDominationException(String s) { super(s); }
 }
