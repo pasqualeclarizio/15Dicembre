@@ -27,14 +27,14 @@ public class RiskController {
      * @param   o   an observer to be added.
      * @throws NullPointerException   if the parameter o is null.
      */
-    public void addListener(RiskListener o) {
+    public void addListener(RiskListener o) throws RiskControllerException {
         synchronized(this) {
             if (o == null)
             	/*
             	 * delete throw new NullPointerException();
             	 */
                 //throw new NullPointerException();
-            	throw new Error();
+            	throw new RiskControllerException();
             if (!obs.contains(o)) {
                 obs.addElement(o);
             }

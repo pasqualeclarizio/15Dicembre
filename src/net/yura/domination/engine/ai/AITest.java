@@ -97,9 +97,9 @@ public class AITest extends AISubmissive {
     public String getRoll() {
 	    int n=((Country)game.getAttacker()).getArmies() - 1;
 	    if (n > 3) {
-		    return "roll "+3;
+		    return "roll "+(3);
 	    }
-	    return "roll "+n;
+	    return "roll "+(n);
     }
 
 
