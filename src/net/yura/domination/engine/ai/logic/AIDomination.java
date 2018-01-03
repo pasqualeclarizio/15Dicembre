@@ -312,7 +312,7 @@ public class AIDomination extends AISubmissive {
         getPlace = getPlaceCommand(toPlace, 1);
         return getPlace;
     }
-    private void aiCheckPla(Player owner, Player otherOwner) {
+    private void gTryO(Player owner, Player otherOwner) {
         if (owner == player || otherOwner != owner && r.nextBoolean()) {
             boolean hasPlacement = true;
         } else if (otherOwner == null) {
@@ -562,25 +562,25 @@ public class AIDomination extends AISubmissive {
             return objective;
         }
         //take over a continent
-        if (domiAiCC(gameState,shouldEndAttack,attack,isTooWeak,continents)) {
+        if (d_Sh(gameState,shouldEndAttack,attack,isTooWeak,continents)) {
             int toConsider = continents.size();
             if (attack && isTooWeak) {
                 toConsider = 1;
             }
-            aichDomX(toConsider,continents,pressAttack,attackable,attack,gameState,shouldEndAttack,targets,allCountriesTaken,extra);
+            wri_I(toConsider,continents,pressAttack,attackable,attack,gameState,shouldEndAttack,targets,allCountriesTaken,extra);
         }
-        delGameSt(attack,gameState,attackable,shouldEndAttack,targets,v);
+        azU_bu(attack,gameState,attackable,shouldEndAttack,targets,v);
         //fail-safe - TODO: should probably just pile onto the max
         return super.getPlaceArmies();
     }
-    private boolean domiAiCC(GameState gameState, boolean shouldEndAttack, boolean attack, boolean isTooWeak,List<EliminationTarget> continents) {
+    private boolean d_Sh(GameState gameState, boolean shouldEndAttack, boolean attack, boolean isTooWeak,List<EliminationTarget> continents) {
         boolean isCheck = false;
-        if(chDomAiCh(shouldEndAttack,continents) || isCheckedCC17(attack,gameState) || ckDomStat(isTooWeak,gameState)) {
+        if(ing_Pra(shouldEndAttack,continents) || isCheckedCC17(attack,gameState) || cf_bes(isTooWeak,gameState)) {
             isCheck = true;
         }
         return isCheck;
     }
-    private boolean ckDomStat(boolean isTooWeak, GameState gameState) {
+    private boolean cf_bes(boolean isTooWeak, GameState gameState) {
         boolean isChecked = false;
         if((!isTooWeak && (gameState.breakOnlyTargets || gameState.me.defenseValue >
                 gameState.orderedPlayers.get(0).attackValue)))
@@ -593,18 +593,18 @@ public class AIDomination extends AISubmissive {
             isChecked = true;
         return isChecked;
     }
-    private boolean chDomAiCh(boolean shouldEndAttack,List<EliminationTarget> continents) {
+    private boolean ing_Pra(boolean shouldEndAttack,List<EliminationTarget> continents) {
         boolean isChecked = false;
         if(!continents.isEmpty() && (!shouldEndAttack || (!game.isCapturedCountry() && !game.getCards().isEmpty())))
             isChecked = true;
         return isChecked;
     }
-    private void aichDomX(int toConsider,List<EliminationTarget> continents,boolean pressAttack,List<Country> attackable,boolean attack,
+    private void wri_I(int toConsider,List<EliminationTarget> continents,boolean pressAttack,List<Country> attackable,boolean attack,
                                 GameState gameState,boolean shouldEndAttack,Map<Country, AttackTarget> targets,Set<Country> allCountriesTaken, int extra) {
         for (int i = 0; i < toConsider; i++) {
             String result = liRemaing(attackable, targets, gameState, attack, extra, allCountriesTaken,
                     continents.get(i), shouldEndAttack, false);
-            delChDele(i,continents,pressAttack,attackable,attack,gameState,result,targets,allCountriesTaken);
+            xSel_h(i,continents,pressAttack,attackable,attack,gameState,result,targets,allCountriesTaken);
         }
         if (!attack) {
             AttackTarget min = null;
@@ -612,16 +612,16 @@ public class AIDomination extends AISubmissive {
             deleteThisCC10(min,gameState,attack,targets,attackable);
         }
     }
-    private String delChDele(int i,List<EliminationTarget> continents,boolean pressAttack,List<Country> attackable,boolean attack,
+    private String xSel_h(int i,List<EliminationTarget> continents,boolean pressAttack,List<Country> attackable,boolean attack,
                                   GameState gameState,String result,Map<Country, AttackTarget> targets,Set<Country> allCountriesTaken) {
         if (result != null) {
             eliminating = true;
             deleteThisCC11(i,continents,allCountriesTaken);
-            delThLimi(i,continents,attack,gameState,targets,attackable,pressAttack);
+            z_byPz(i,continents,attack,gameState,targets,attackable,pressAttack);
             return result;
         }
     }
-    private String delThLimi(int i,List<EliminationTarget> continents,boolean attack,GameState gameState,
+    private String z_byPz(int i,List<EliminationTarget> continents,boolean attack,GameState gameState,
                                   Map<Country, AttackTarget> targets,List<Country> attackable, boolean pressAttack) {
         String s = null;
         if (ensuRisk(continents.get(i).co,
@@ -681,7 +681,7 @@ public class AIDomination extends AISubmissive {
             }
         }
     }
-    private String delGameSt(boolean attack,GameState gameState,List<Country> attackable,boolean shouldEndAttack,Map<Country, AttackTarget> targets,
+    private String azU_bu(boolean attack,GameState gameState,List<Country> attackable,boolean shouldEndAttack,Map<Country, AttackTarget> targets,
                                  List<Country> v) {
         String s = null;
         if (attack) {
@@ -705,7 +705,7 @@ public class AIDomination extends AISubmissive {
             List<EliminationTarget> toEliminate = findEliminationTargets(targets, gameState, attack, extra);
             if (!toEliminate.isEmpty()) {
                 Collections.sort(toEliminate);
-                s = eliListAtt(gameState,toEliminate,shouldEndAttack,targets,attack,attackable,extra,allCountriesTaken);
+                s = elYH_ji(gameState,toEliminate,shouldEndAttack,targets,attack,attackable,extra,allCountriesTaken);
             }
             String objective = planObjective(attack, attackable, gameState, targets, allCountriesTaken, pressAttack,
                     shouldEndAttack, true);
@@ -713,8 +713,8 @@ public class AIDomination extends AISubmissive {
                 return objective;
 
             }
-            elimAttaSet(gameState,attackable,extra,allCountriesTaken,attack,targets,shouldEndAttack,toEliminate);
-            s = tryDelCount(gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents,isTooWeak,shouldEndAttack);
+            gtOh_bx(gameState,attackable,extra,allCountriesTaken,attack,targets,shouldEndAttack,toEliminate);
+            s = k_CopY(gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents,isTooWeak,shouldEndAttack);
         } else if (!attack) {
             String result = fortify(gameState, attackable, game.getMaxDefendDice() == 2, v);
             while(result != null) {
@@ -723,13 +723,13 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String tryDelCount(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
+    private String k_CopY(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                  boolean attack,Map<Country, AttackTarget> targets, boolean pressAttack,List<EliminationTarget> continents,
                                  boolean isTooWeak, boolean shouldEndAttack) {
         String s = null;
-        setPressAttk(attack,allCountriesTaken,pressAttack,shouldEndAttack,gameState,attackable,targets,continents);
-        s = extrAttGame(gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents,isTooWeak);
-        if (chPressAtt(pressAttack,attack) || (tooWeakTry(isTooWeak) && tooWeakTry(isTooWeak))) {
+        gCoKM(attack,allCountriesTaken,pressAttack,shouldEndAttack,gameState,attackable,targets,continents);
+        s = YPo_gb(gameState,attackable,extra,allCountriesTaken,attack,targets,pressAttack,continents,isTooWeak);
+        if (fj_Rt(pressAttack,attack) || (tUjk_Ko(isTooWeak) && tUjk_Ko(isTooWeak))) {
             String result = breakContinent(attackable, targets, gameState, attack, pressAttack, v);
             while(result != null) {
                 s = result;
@@ -737,13 +737,13 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private boolean chPressAtt(boolean pressAttack, boolean attack) {
+    private boolean fj_Rt(boolean pressAttack, boolean attack) {
         boolean isCheck = false;
         if(pressAttack || (type != PLAYER_AI_HARD && attack))
             isCheck = true;
         return isCheck;
     }
-    private boolean tooWeakTry(boolean isTooWeak) {
+    private boolean tUjk_Ko(boolean isTooWeak) {
         boolean isChecked = false;
         if(type == PLAYER_AI_HARD && !isTooWeak)
             isChecked = true;
@@ -755,7 +755,7 @@ public class AIDomination extends AISubmissive {
             isChecked = true;
         return isChecked;
     }
-    private String setPressAttk(boolean attack,Set<Country> allCountriesTaken,boolean pressAttack, boolean shouldEndAttack,
+    private String gCoKM(boolean attack,Set<Country> allCountriesTaken,boolean pressAttack, boolean shouldEndAttack,
                                   GameState gameState,List<Country> attackable,Map<Country,AttackTarget> targets,List<EliminationTarget> continents) {
         String s = null;
         if (!attack && allCountriesTaken.isEmpty() && shouldEndAttack && !pressAttack &&
@@ -768,7 +768,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String gamTooAt(GameState gameState,boolean isTooWeak,List<Country> attackable,Map<Country, AttackTarget> targets,
+    private String Po_Y(GameState gameState,boolean isTooWeak,List<Country> attackable,Map<Country, AttackTarget> targets,
                                   boolean attack,boolean pressAttack) {
         String s = null;
         if ((gameState.commonThreat != null && !gameState.commonThreat.owned.isEmpty()) ||
@@ -780,11 +780,11 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String extrAttGame(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
+    private String YPo_gb(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                  boolean attack,Map<Country, AttackTarget> targets, boolean pressAttack,List<EliminationTarget> continents,
                                  boolean isTooWeak) {
         String s = null;
-        gamTooAt(gameState,isTooWeak,attackable,targets,attack,pressAttack);
+        Po_Y(gameState,isTooWeak,attackable,targets,attack,pressAttack);
 
         if (!attack && (gameState.orderedPlayers.size() > 1 || player.getCapital() != null ||
                 player.getMission() != null || game.getMaxDefendDice() > 2)) {
@@ -793,7 +793,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String eliListAtt(GameState gameState,List<EliminationTarget> toEliminate,boolean shouldEndAttack,
+    private String elYH_ji(GameState gameState,List<EliminationTarget> toEliminate,boolean shouldEndAttack,
                                   Map<Country, AttackTarget> targets,boolean attack, List<Country> attackable, int extra,Set<Country> allCountriesTaken) {
         String s = null;
         int size = toEliminate.size();
@@ -813,11 +813,11 @@ public class AIDomination extends AISubmissive {
                 toEliminate.remove(i--);
                 continue;
             }
-            elListTar(et,gameState,toEliminate,extra,attack,targets,shouldEndAttack,allCountriesTaken,attackable);
+            fIO_bu(et,gameState,toEliminate,extra,attack,targets,shouldEndAttack,allCountriesTaken,attackable);
         }
         return s;
     }
-    private String elListTar(EliminationTarget et,GameState gameState,List<EliminationTarget> toEliminate,int extra,boolean attack,
+    private String fIO_bu(EliminationTarget et,GameState gameState,List<EliminationTarget> toEliminate,int extra,boolean attack,
                                   Map<Country,AttackTarget> targets,boolean shouldEndAttack,Set<Country> allCountriesTaken,List<Country> attackable) {
         String s = null;
         if ((et.ps.p.getCards().isEmpty() &&
@@ -835,7 +835,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String hashAllCoun(List<EliminationTarget> toEliminate,HashMap<Country, AttackTarget> newTargets,List<Country> attackable,
+    private String hTOz_p(List<EliminationTarget> toEliminate,HashMap<Country, AttackTarget> newTargets,List<Country> attackable,
                                 GameState gameState,boolean attack,Set<Country> allCountriesTaken,int extra,boolean shouldEndAttack) {
         String s = null;
         int size = toEliminate.size();
@@ -855,14 +855,14 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String listAttTarg(List<EliminationTarget> toEliminate,List<Country> attackable,
+    private String yXr_plo(List<EliminationTarget> toEliminate,List<Country> attackable,
                                  GameState gameState,boolean attack,Set<Country> allCountriesTaken,int extra,boolean shouldEndAttack,
                                  Map<Country, AttackTarget> targets) {
         String s = null;
         if (!attack) {
             //redo the target search using low probability
             HashMap<Country, AttackTarget> newTargets = searchAllTargets(true, attackable, gameState);
-            s = hashAllCoun(toEliminate,newTargets,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack);
+            s = hTOz_p(toEliminate,newTargets,attackable,gameState,attack,allCountriesTaken,extra,shouldEndAttack);
         } else if (isIncreasingSet()){
             //try to pursue the weakest player
             EliminationTarget et = toEliminate.get(0);
@@ -875,7 +875,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String attGametar(String result,GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
+    private String pkBA_b(String result,GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                  boolean attack,Map<Country, AttackTarget> targets, boolean pressAttack,List<EliminationTarget> continents) {
         String s = null;
         while(result != null) {
@@ -891,7 +891,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private void elimAttaSet(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
+    private void gtOh_bx(GameState gameState,List<Country> attackable, int extra,Set<Country> allCountriesTaken,
                                    boolean attack,Map<Country, AttackTarget> targets,boolean shouldEndAttack,List<EliminationTarget> toEliminate) {
         boolean check = false;
         if (type == PLAYER_AI_HARD && gameState.orderedPlayers.size() > 1
@@ -910,13 +910,13 @@ public class AIDomination extends AISubmissive {
             }
         }
     }
-    protected String objMaSet(boolean attack, List<Country> attackable,
+    protected String reIP_h(boolean attack, List<Country> attackable,
                                    GameState gameState, Map<Country, AttackTarget> targets,
                                    Set<Country> allCountriesTaken, boolean pressAttack, boolean shouldEndAttack, boolean highProbability) {
         return null;
     }
 
-    protected boolean ensuRisk(Continent c, boolean attack,
+    protected boolean zpER_hy(Continent c, boolean attack,
                                                List<Country> attackable, GameState gameState,
                                                Map<Country, AttackTarget> targets, boolean pressAttack,
                                                List<EliminationTarget> continents) {
@@ -957,7 +957,7 @@ public class AIDomination extends AISubmissive {
             target_null();
         }
     }
-    private String riBooTar(List<Country> attackable, GameState gameState,
+    private String lkBy_g(List<Country> attackable, GameState gameState,
                                   Map<Country, AttackTarget> targets, boolean pressAttack, List<EliminationTarget> continents) {
         if (this.type == AIDomination.PLAYER_AI_EASY) {
             return null;
@@ -980,7 +980,7 @@ public class AIDomination extends AISubmissive {
     /**
      * one last pass looking to get a risk card or reduce forces
      */
-    private String la_AttcBoo(boolean attack, List<Country> attackable,
+    private String xy_Uk(boolean attack, List<Country> attackable,
                                GameState gameState, Map<Country, AttackTarget> targets, boolean shouldEndAttack, List<Country> border) {
         boolean isTooWeak = isTooWeak(gameState) && gameState.me.defenseValue < .5*gameState.orderedPlayers.get(0).defenseValue;
         boolean forceReduction = game.isCapturedCountry() || game.getCards().isEmpty() || gameState.me.playerValue > 1.5*gameState.orderedPlayers.get(0).playerValue;
@@ -1004,7 +1004,7 @@ public class AIDomination extends AISubmissive {
         }
         return s;
     }
-    private String k_AnStaGam(Country initialAttack,GameState gameState,
+    private String SizeRec_Po(Country initialAttack,GameState gameState,
                                   boolean shouldEndAttack, Map<Country, AttackTarget> targets, int bestRoute,
                                   AttackTarget target, Country attackFrom) {
         String s = null;
