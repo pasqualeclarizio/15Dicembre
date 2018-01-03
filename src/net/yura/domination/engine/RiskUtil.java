@@ -73,8 +73,8 @@ public class RiskUtil {
         try {
             settings.load(RiskUtil.class.getResourceAsStream("settings.ini"));
         }
-        catch (Exception ex) {
-            throw new RuntimeException("can not find settings.ini file!",ex);
+        catch (IOException ex) {
+            System.out.println("can not find settings.ini file!");
         }
 
         RISK_VERSION_URL = settings.getProperty("VERSION_URL");
@@ -98,6 +98,7 @@ public class RiskUtil {
     public static InputStream openStream(String a) throws IOException {
         return streamOpener.openStream(a);
     }
+<<<<<<< HEAD
 
     public static ResourceBundle getResourceBundle(Class c,String n,Locale l) {
         return streamOpener.getResourceBundle(c, n, l);
@@ -117,6 +118,27 @@ public class RiskUtil {
         return streamOpener.loadGameFile(file);
     }
 
+=======
+
+    public static ResourceBundle getResourceBundle(Class c,String n,Locale l) {
+        return streamOpener.getResourceBundle(c, n, l);
+    }
+
+    public static void openURL(URL url) throws Exception {
+        streamOpener.openURL(url);
+    }
+
+    public static void openDocs(String docs) throws Exception {
+        streamOpener.openDocs(docs);
+    }
+    public static void saveFile(String file, RiskGame aThis) throws Exception {
+        streamOpener.saveGameFile(file, aThis);
+    }
+    public static InputStream getLoadFileInputStream(String file) throws Exception {
+        return streamOpener.loadGameFile(file);
+    }
+
+>>>>>>> 2290264b552aa68c481db9320ffc4f67e1ba5c6f
     /**
      * option string looks like this:
      *
@@ -224,9 +246,15 @@ public class RiskUtil {
             }
         }
     }
+<<<<<<< HEAD
 
     public static void savePlayers(Risk risk,Class uiclass) {
 
+=======
+
+    public static void savePlayers(Risk risk,Class uiclass) {
+
+>>>>>>> 2290264b552aa68c481db9320ffc4f67e1ba5c6f
         Preferences prefs=null;
         try {
             prefs = Preferences.userNodeForPackage( uiclass );
@@ -387,6 +415,7 @@ public class RiskUtil {
 
         } catch (IOException ex) {
             Logger.getLogger(RiskUtil.class.getName()).log(Level.SEVERE, null, ex);
+<<<<<<< HEAD
         }
         return null;
     }
@@ -398,6 +427,19 @@ public class RiskUtil {
         } catch (IOException ex) {
             Logger.getLogger(RiskUtil.class.getName()).log(Level.SEVERE, null, ex);
         }
+=======
+        }
+        return null;
+    }
+    public static java.util.Map RiskUtil3(){
+        BufferedReader bufferin=null;
+        String input = null;
+        try {
+            input = bufferin.readLine();
+        } catch (IOException ex) {
+            Logger.getLogger(RiskUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+>>>>>>> 2290264b552aa68c481db9320ffc4f67e1ba5c6f
         if(input.charAt(0)!='[' || input.charAt( input.length()-1 )!=']') {
         } else {
             String mode = "newsection";
@@ -437,6 +479,7 @@ public class RiskUtil {
             while (description==null) {
 
                 StringBuffer d = new StringBuffer();
+<<<<<<< HEAD
 
                 while (st.hasMoreElements()) {
 
@@ -451,6 +494,22 @@ public class RiskUtil {
             Vector misss=null;
             misss.add( description );
 
+=======
+
+                while (st.hasMoreElements()) {
+
+                    d.append( st.nextToken() );
+                    d.append( " " );
+                }
+
+                description = d.toString();
+                break;
+
+            }
+            Vector misss=null;
+            misss.add( description );
+
+>>>>>>> 2290264b552aa68c481db9320ffc4f67e1ba5c6f
         }
         return null;
     }
@@ -577,15 +636,37 @@ public class RiskUtil {
         // as this could be dir=.../maps fileName=preview/file.jpg
         // we need to make sure the preview dir exists, and if it does not, we must make it
         File parent = outFile.getParentFile();
+        OutputStream oS = null;
         if (!parent.isDirectory() && !parent.mkdirs()) { // if it does not exist and i cant make it
-            throw new RuntimeException("can not create dir "+parent);
+            try {
+            
+<<<<<<< HEAD
+            } catch{
+            	
+            }
+            finally (RuntimeException runtimeException) {
+                oS = new FileOutputStream(outFile);
+                System.err.println("can not create dir " + parent);
+            }
+           
+=======
+            } catch (RuntimeException runtimeException) {
+                oS = new FileOutputStream(outFile);
+                System.err.println("can not create dir " + parent);
+            }
+>>>>>>> 2290264b552aa68c481db9320ffc4f67e1ba5c6f
         }
-        return new FileOutputStream( outFile );
+
+        return oS;
     }
 
     public static void rename(File oldFile,File newFile) {
         if (newFile.exists() && !newFile.delete()) {
-            throw new RuntimeException("can not del dest file: "+newFile);
+            try {
+            
+            } catch (RuntimeException runtimeException) {
+                System.err.println("can not del dest file: " + newFile);
+            }
         }
         if (!oldFile.renameTo(newFile)) {
             try {
@@ -596,7 +677,11 @@ public class RiskUtil {
                 }
             }
             catch(Exception ex) {
-                throw new RuntimeException("rename failed: from: "+oldFile+" to: "+newFile,ex);
+                try {
+                   
+                } catch (RuntimeException runtimeException) {
+                    System.err.println("rename failed: from: " + oldFile + " to: " + newFile);
+                }
             }
         }
     }
