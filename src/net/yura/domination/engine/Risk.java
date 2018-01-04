@@ -9,12 +9,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.security.Key;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +26,6 @@ import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.crypto.Cipher;
-
 import net.yura.domination.engine.ai.AIManager;
 import net.yura.domination.engine.core.Card;
 import net.yura.domination.engine.core.Country;
@@ -39,7 +35,6 @@ import net.yura.domination.engine.core.RiskGame;
 import net.yura.domination.engine.p2pclient.ChatClient;
 import net.yura.domination.engine.p2pserver.ChatArea;
 import net.yura.domination.engine.translation.TranslationBundle;
-import net.yura.mobile.util.Url;
 
 /**
  * <p> Main Risk Class </p>
@@ -128,7 +123,9 @@ public class Risk extends Thread {
             }
             names[0] = newName;
         }
-        catch(Throwable th) { }
+        catch(Throwable th) {
+            System.out.println("error");
+        }
 
         riskconfig = new Properties();
 
@@ -139,8 +136,8 @@ public class Risk extends Thread {
         riskconfig.setProperty("default.autoplaceall","false");
         riskconfig.setProperty("default.recyclecards","true");
         riskconfig.setProperty("ai.wait", String.valueOf(AIManager.getWait()) );
-
-        for (int c=0;c<names.length;c++) {
+        int lenght = names.length;
+        for (int c=0;c<lenght;c++) {
             riskconfig.setProperty("default.player"+(c+1)+".type",types[c]);
             riskconfig.setProperty("default.player"+(c+1)+".color",colors[c]);
             riskconfig.setProperty("default.player"+(c+1)+".name", names[c] );
@@ -150,7 +147,7 @@ public class Risk extends Thread {
             riskconfig.load( RiskUtil.openStream("game.ini") );
         }
         catch (Exception ex) {
-            // can not find file, no problem
+            System.out.println("error");
         }
 
         AIManager.setWait( Integer.parseInt( riskconfig.getProperty("ai.wait") ) );
@@ -183,58 +180,9 @@ public class Risk extends Thread {
             catch(Throwable th) {
                 return "sandbox" + randomString;
             }
-/*
-
-			//InetAddress localAddr = InetAddress.getLocalHost();
-
-			//myAddress = localAddr.getHostAddress();
-
-			myAddress=null;
-			Enumeration ifaces = NetworkInterface.getNetworkInterfaces();
-
-			search:
-			while (ifaces.hasMoreElements()) {
-				NetworkInterface ni = (NetworkInterface)ifaces.nextElement();
-				//System.out.println(ni.getName() + ":");
-
-				Enumeration addrs = ni.getInetAddresses();
-
-				while (addrs.hasMoreElements()) {
-					InetAddress ia = (InetAddress)addrs.nextElement();
-					//System.out.println(" " + ia.getHostAddress());
-
-
-					String tmpAddr = ia.getHostAddress();
-					if (!tmpAddr.equals("127.0.0.1")) {
-
-						myAddress = tmpAddr;
-						break search;
-
-					}
-
-
-				}
-			}
-
-			if (myAddress==null) {
-				throw new Exception("no IP found");
-			}
-*/
-
         }
         catch (Exception e) { // if network has not been setup
             return "nonet" + randomString;
-        }
-    }
-
-    public static void setShowDice(boolean show) {
-        if (show) {
-            SHOW_DICE_SLEEP = DEFAULT_SHOW_DICE_SLEEP;
-            ROLL_DICE_SLEEP = DEFAULT_ROLL_DICE_SLEEP;
-        }
-        else {
-            SHOW_DICE_SLEEP = 0;
-            ROLL_DICE_SLEEP = 0;
         }
     }
 
@@ -242,20 +190,26 @@ public class Risk extends Thread {
         return riskconfig.getProperty(a);
     }
 
-    public void addRiskListener(RiskListener o) {
-        controller.addListener(o);
-        setHelp();
-    }
-
-    public void deleteRiskListener(RiskListener o) {
-        controller.deleteListener(o);
-    }
-
     private class GameCommand implements Runnable {
+        /**
+         * UI_COMMAND
+         */
         public static final int UI_COMMAND = 1;
+        /**
+         * NETWORK_COMMAND
+         */
         public static final int NETWORK_COMMAND = 2;
+        /**
+         * TYPE
+         */
         final int type;
+        /**
+         * COMMAND
+         */
         final String command;
+        /**
+         * NOTIFIER
+         */
         Object notifier;
 
         public GameCommand(int t,String c) {
@@ -269,15 +223,6 @@ public class Risk extends Thread {
             }
             else if (type == GameCommand.NETWORK_COMMAND) {
                 inGameParser(command);
-            }
-            else {
-                throw new RuntimeException();
-            }
-
-            if (notifier != null) {
-                synchronized (notifier) {
-                    notifier.notifyAll();
-                }
             }
         }
 
@@ -297,17 +242,6 @@ public class Risk extends Thread {
     public void parserFromNetwork(String m) {
         addToInbox( new GameCommand(GameCommand.NETWORK_COMMAND, m ) );
     }
-
-    public void parserAndWait(String uiCommand) throws InterruptedException {
-        GameCommand gCommand = new GameCommand(GameCommand.UI_COMMAND, uiCommand );
-        Object lock = new Object();
-        gCommand.notifier = lock;
-        synchronized(lock) {
-            addToInbox(gCommand);
-            lock.wait();
-        }
-    }
-
     private void addToInbox(Runnable m) {
         synchronized(inbox) {
             inbox.add(m);
@@ -315,706 +249,615 @@ public class Risk extends Thread {
         }
     }
 
-    public void kill() {
-        synchronized(inbox) {
-            running = false;
-            inbox.notify();
-        }
-    }
-
     boolean running = true;
     public void run() {
-        Runnable message=null;
-        while (running) {
-            try {
-                synchronized(inbox) {
-
-                    while ( inbox.isEmpty() ) {
-                        if (!running) return;
-
-                        try { inbox.wait(); }
-                        catch(InterruptedException e) {
-                            // TODO fix this, this is totally wrong
-                            System.err.println("InterruptedException in "+getName());
+        Runnable message = null;
+        try {
+            while (running) {
+                synchronized (inbox) {
+                    boolean emp = inbox.isEmpty();
+                    try {
+                        while (emp) {
+                            if (!running) return;
+                            inbox.wait();
                         }
+                    } catch (InterruptedException e) {
+                        // TODO fix this, this is totally wrong
+                        System.err.println("InterruptedException in " + getName());
                     }
-
                     message = (Runnable) inbox.remove(0);
                 }
-
                 message.run();
             }
-            catch (Exception ex) {
-                logger.log(Level.WARNING,"ERROR processing "+ message,ex);
-            }
+        } catch (Exception ex) {
+            logger.log(Level.WARNING, "ERROR processing " + message, ex);
         }
     }
-
     private void processFromUI(String message) {
-
-        if ( message.trim().length()==0 ) {
-            controller.sendMessage(">", false, false );
-            getInput();
-            return;
-        }
-
-        // Show version
-        if (message.equals("ver")) {
-            controller.sendMessage(">" + message, false, false );
-            controller.sendMessage(RiskUtil.GAME_NAME+" Game Engine [Version " + RiskUtil.RISK_VERSION + "]", false, false );
-            getInput();
-        }
+        String output = null;
+        processFromUI5(message);
+        processFromUI8(message);
         // take no action
-        else if (message.startsWith("rem ")) {
-            controller.sendMessage(">" + message, false, false );
-            getInput();
-        }
+        processFromUI9(message);
         // out of game commands
-        else if (game==null) { // if no game
+        if (game==null) { // if no game
             noGameParser(message);
         }
         // IN GAME COMMANDS
         else {
             StringTokenizer StringT = new StringTokenizer(message);
             String input=StringT.nextToken();
-            String output;
-
             // CLOSE GAME
-            while (input.equals("closegame")) {
-                while (!StringT.hasMoreTokens()) {
-                    closeGame();
-                    output=resb.getString("core.close.closed");
-                    break;
-                }
-                while (!StringT.hasMoreTokens()) {
-                    output=RiskUtil.replaceAll( resb.getString( "core.error.syntax"), "{0}", "closegame");
-                    break;
-                }
-                break;
-            }
+            processFromUI10(input,output,StringT);
             // SAVE GAME
-            while(input.equals("savegame")) {
-                while (StringT.countTokens() >= 1) {
-                    if ( unlimitedLocalMode ) {
-
-                        String filename = RiskUtil.getAtLeastOne(StringT);
-
-                        try {
-                            RiskUtil.saveFile(filename,game);
-                            output=resb.getString( "core.save.saved");
-                        }
-                        catch (Exception ex) {
-                            logger.log(Level.WARNING, "error saving game to file: "+filename,ex);
-
-                            output=resb.getString( "core.save.error.unable")+" "+ex;
-                            showMessageDialog(output);
-                        }
-                    }
-                    else {
-                        output = resb.getString( "core.save.error.unable" );
-                    }
-                    break;
-                }
-                while (!(StringT.countTokens() >= 1))
-                { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "savegame filename");
-                	break;
-                	}
-                break;
-            }
+            processFromUI16(input,output,StringT);
             // REPLAY A GAME FROM THE GAME FILE
-            while(input.equals("replay")) {
-                while( StringT.hasMoreTokens()==false ) {
-                    if ( unlimitedLocalMode ) {
-                    	/*
-                    	 * try not use
-                    	 */
-                    	List replayCommands = game.getCommands();
-                        saveGameToUndoObject();
-                        game = new RiskGame();
-                        replay = true;
-                        for (Iterator e = replayCommands.iterator(); e.hasNext();) {
-                            inGameParser( (String)e.next() );
-                        }
-                        replay = false;
-                        output="replay of game finished";
-                    	/*
-                        try {
-                            List replayCommands = game.getCommands();
-                            saveGameToUndoObject();
-                            game = new RiskGame();
-                            replay = true;
-                            for (Iterator e = replayCommands.iterator(); e.hasNext();) {
-                                inGameParser( (String)e.next() );
-                                //try{ Thread.sleep(1000); }
-                                //catch(InterruptedException e){}
-                            }
-                            replay = false;
-                            output="replay of game finished";
-                        }
-                        catch (Exception e) {
-                            output="error with replay "+e;
-                            RiskUtil.printStackTrace(e);
-                        }
-                        */
-                    }
-                    else {
-                        output="can only replay local games";
-                    }
-                    break;
-                }
-                else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "replay"); }
-                break;
+            try {
+                processFromUI15(input, output, StringT);
+            }catch (Exception e) {
+                System.out.println("error");
             }
-            if ( onlinePlayClient == null ) {
-                inGameParser( myAddress+" "+message );
-                output=null;
-              
-            }
-            else {
-                // send to network
-                onlinePlayClient.sendUserCommand( message );
-                output=null;
-                
-            }
-
-            while (output!=null) {
-                controller.sendMessage("game>" + message, false, false);
-                controller.sendMessage(output, false, false);
-                getInput();
-                break;
-            }
-
+            processFromUI13(output,message);
         }
 
     }
+    private void processFromUI16(String input,String output,StringTokenizer StringT) {
+        boolean eq = input.equals("savegame");
+        while(eq) {
+            processFromUI12(output,StringT);
+            processFromUI14(output,StringT);
+            break;
+        }
+    }
+    private void processFromUI15(String input, String output, StringTokenizer StringT) throws Exception {
+        boolean eq = input.equals("replay");
+        while(eq) {
+            processFromUI4(output,StringT);
+            break;
+        }
+    }
+    private void processFromUI14(String output,StringTokenizer StringT) {
+        int s = StringT.countTokens();
+        while (!(s >= 1))
+        { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "savegame filename");
+            break;
+        }
+    }
+    private void processFromUI13(String output, String message) {
+        if ( onlinePlayClient == null ) {
+            inGameParser( myAddress+" "+message );
+            output=null;
 
+        }
+        else {
+            // send to network
+            onlinePlayClient.sendUserCommand( message );
+            output=null;
+
+        }
+        processFromUI2(output,message);
+    }
+    private void processFromUI12(String output,StringTokenizer StringT) {
+        int s = StringT.countTokens();
+        while (s >= 1) {
+            processFromUI11(output,StringT);
+            break;
+        }
+    }
+    private void processFromUI11(String output,StringTokenizer StringT) {
+        if ( unlimitedLocalMode ) {
+            String filename = RiskUtil.getAtLeastOne(StringT);
+            try {
+                RiskUtil.saveFile(filename,game);
+                output=resb.getString( "core.save.saved");
+            }
+            catch (Exception ex) {
+                logger.log(Level.WARNING, "error saving game to file: "+filename,ex);
+
+                output=resb.getString( "core.save.error.unable")+" "+ex;
+                showMessageDialog(output);
+            }
+        }
+        else {
+            output = resb.getString( "core.save.error.unable" );
+        }
+    }
+    private void processFromUI10(String input,String output, StringTokenizer StringT) {
+        boolean eq = input.equals("closegame");
+        while (eq) {
+            processFromUI6(output, StringT);
+            processFromUI7(output,StringT);
+            break;
+        }
+    }
+    private void processFromUI9(String message) {
+        if (message.startsWith("rem ")) {
+            controller.sendMessage(">" + message, false, false );
+            getInput();
+        }
+    }
+    private void processFromUI8(String message) {
+        // Show version
+        if (message.equals("ver")) {
+            controller.sendMessage(">" + message, false, false );
+            controller.sendMessage(RiskUtil.GAME_NAME+" Game Engine [Version " + RiskUtil.RISK_VERSION + "]", false, false );
+            getInput();
+        }
+    }
+    private void processFromUI7(String output, StringTokenizer StringT) {
+        boolean b = !StringT.hasMoreTokens();
+        while (b) {
+            output=RiskUtil.replaceAll( resb.getString( "core.error.syntax"), "{0}", "closegame");
+            break;
+        }
+    }
+    private void processFromUI6(String output, StringTokenizer StringT) {
+        boolean b = !StringT.hasMoreTokens();
+        while (b) {
+            closeGame();
+            output=resb.getString("core.close.closed");
+            break;
+        }
+    }
+    private void processFromUI5(String message) {
+        if ( message.trim().length()==0 ) {
+            controller.sendMessage(">", false, false );
+            getInput();
+        }
+    }
+    private void processFromUI3(String output) throws Exception {
+        if ( unlimitedLocalMode ) {
+            saveGameToUndoObject();
+            game = new RiskGame();
+            replay = true;
+            replay = false;
+            output="replay of game finished";
+        }
+        else {
+            output="can only replay local games";
+        }
+    }
+    private void processFromUI4(String output, StringTokenizer StringT) throws Exception {
+        boolean b = StringT.hasMoreTokens();
+        while(b ==false ) {
+            processFromUI3(output);
+            break;
+        }
+    }
+    private void processFromUI2(String output, String message) {
+        while (output!=null) {
+            controller.sendMessage("game>" + message, false, false);
+            controller.sendMessage(output, false, false);
+            getInput();
+        }
+    }
+    private void noGameParser2(StringTokenizer StringT, String output) {
+        boolean b = StringT.hasMoreTokens();
+        if (b==false) {
+            try {
+                game = new RiskGame();
+                unlimitedLocalMode = true;
+                controller.newGame(true);
+                setupPreviews( doesMapHaveMission() );
+                output=resb.getString( "core.newgame.created");
+            }
+            catch (Exception e) {
+                //RiskUtil.printStackTrace(e);
+                output=resb.getString( "core.newgame.error") + " " + e.toString();
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "newgame"); }
+    }
+    private void noGameParser3() throws Exception {
+        while (game == null) {
+            throw new Exception("no game");
+        }
+    }
+    private void noGameParser4(Player player, String output) {
+        while ( player != null ) {
+            // the game is saved
+            saveGameToUndoObject();
+            output=output+ System.getProperty("line.separator") + resb.getString( "core.loadgame.currentplayer") + " " + player.getName();
+            break;
+        }
+    }
+    private void noGameParser5() {
+        int i = game.getState();
+        while (i==RiskGame.STATE_NEW_GAME) {
+            controller.newGame(true);
+            setupPreviews( doesMapHaveMission() );
+            break;
+        }
+    }
+    private void noGameParser6() {
+        int value = game.getState();
+        while (!(value ==RiskGame.STATE_NEW_GAME) ){
+            controller.startGame(unlimitedLocalMode);
+            break;
+        }
+    }
+    private void noGameParser13(String input,String output,StringTokenizer StringT) {
+        if (input.equals("newgame")) {
+            noGameParser2(StringT,output);
+        }
+    }
+    private void noGameParser14(StringTokenizer StringT, String output) {
+        if (StringT.countTokens() >= 1) {
+            // this is not needed here as u can only get into this bit of code if game == null
+            //if (game == null) {
+            String filename = RiskUtil.getAtLeastOne(StringT);
+
+            try {
+                game = RiskGame.loadGame(filename);
+                unlimitedLocalMode = true;
+                output = resb.getString("core.loadgame.loaded");
+                noGameParser3();
+                Player player = game.getCurrentPlayer();
+                noGameParser4(player, output);
+                noGameParser5();
+                noGameParser6();
+            } catch (Exception ex) {
+                logger.log(Level.WARNING, "error loading game from file: " + filename, ex);
+
+                output = resb.getString("core.loadgame.error.load") + " " + ex;
+                showMessageDialog(output);
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "loadgame filename"); }
+    }
+    private void noGameParser16(String input,StringTokenizer StringT, String output) {
+        // LOAD GAME
+        if (input.equals("loadgame")) {
+            noGameParser14(StringT,output);
+        }
+    }
+    private void noGameParser17(StringTokenizer StringT, String output) throws Exception{
+        if (StringT.countTokens() == 1) {
+            try {
+                onlinePlayClient = new ChatClient( this, myAddress, StringT.nextToken(), port );
+                // CREATE A GAME
+                game = new RiskGame();
+                unlimitedLocalMode = false;
+                controller.newGame(false);
+                setupPreviews( doesMapHaveMission() );
+                output=resb.getString( "core.join.created");
+
+            }
+            catch (UnknownHostException e) {
+                game = null;
+                output=resb.getString( "core.join.error.unknownhost");
+            }
+            catch (ConnectException e) {
+                game = null;
+                output=resb.getString( "core.join.error.connect");
+            }
+            if (game==null) {
+                showMessageDialog(output);
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "join server"); }
+    }
+    private void noGameParser19(String input,StringTokenizer StringT,String output) throws Exception{
+        if (input.equals("join")) {
+            noGameParser17(StringT,output);
+        }
+        // NEW SERVER
+        if (input.equals("startserver")) {
+            noGameParser12(StringT, output);
+        }
+    }
+    private void noGameParser20(String input,StringTokenizer StringT,String output) {
+        if (input.equals("killserver")) {
+            noGameParser10(StringT,output);
+        }
+        else { // if there is no game and the command was unknown
+            output=resb.getString( "core.loadgame.nogame");
+        }
+    }
     private void noGameParser(String message) {
 
         StringTokenizer StringT = new StringTokenizer( message );
 
         String input = StringT.nextToken();
-        String output;
+        String output = null;
 
         controller.sendMessage(">" + message, false, false );
-        if (input.equals("newgame")) {
-
-            if (StringT.hasMoreTokens()==false) {
-            	try {
-            		game = new RiskGame();
-            		unlimitedLocalMode = true;
-            		controller.newGame(true);
-            		setupPreviews( doesMapHaveMission() );
-            		output=resb.getString( "core.newgame.created");
-            	}
-            	catch (Exception e) {
-            		//RiskUtil.printStackTrace(e);
-            		output=resb.getString( "core.newgame.error") + " " + e.toString();
-            	}
-            }
-            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "newgame"); }
-
-        }
-
-        // LOAD GAME
-        else if (input.equals("loadgame")) {
-
-            if (StringT.countTokens() >= 1) {
-
-                // this is not needed here as u can only get into this bit of code if game == null
-                //if (game == null) {
-                String filename = RiskUtil.getAtLeastOne(StringT);
-
-                try {
-                    game = RiskGame.loadGame( filename );
-
-                    while (game == null) {
-                        throw new Exception("no game");                      
-                    }
-
-                    unlimitedLocalMode = true;
-                    output=resb.getString( "core.loadgame.loaded");
-
-                    Player player = game.getCurrentPlayer();
-                    	while ( player != null ) {
-                        // the game is saved
-                        saveGameToUndoObject();
-                        output=output+ System.getProperty("line.separator") + resb.getString( "core.loadgame.currentplayer") + " " + player.getName();
-                        break;
-                    	}
-
-                    while (game.getState()==RiskGame.STATE_NEW_GAME) {
-                        controller.newGame(true);
-                        setupPreviews( doesMapHaveMission() );
-                        break;
-                    }
-                    while (!(game.getState()==RiskGame.STATE_NEW_GAME) ){
-                        controller.startGame(unlimitedLocalMode);
-                        break;
-                    }
-                }
-                catch (Exception ex) {
-                    logger.log(Level.WARNING,"error loading game from file: "+filename,ex);
-
-                    output=resb.getString( "core.loadgame.error.load")+" "+ex;
-                    showMessageDialog(output);
-                }
-                //}
-                //else {
-                //	output=resb.getString( "core.newgame.alreadyloaded");
-                //}
-
-            }
-            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "loadgame filename"); }
-
-        }
-
-        else if (input.equals("join")) {
-
-            if (StringT.countTokens() == 1) {
-
-                // already checked
-                //if (game == null) {
-
-                // CREATE A CLIENT
-                try {
-
-                    onlinePlayClient = new ChatClient( this, myAddress, StringT.nextToken(), port );
-
-                    // CREATE A GAME
-                    game = new RiskGame();
-
-                    unlimitedLocalMode = false;
-
-                    controller.newGame(false);
-                    setupPreviews( doesMapHaveMission() );
-
-                    output=resb.getString( "core.join.created");
-
-                }
-                catch (UnknownHostException e) {
-                    game = null;
-                    output=resb.getString( "core.join.error.unknownhost");
-                }
-                catch (ConnectException e) {
-                    game = null;
-                    output=resb.getString( "core.join.error.connect");
-                }
-                catch (IllegalArgumentException e) {
-                    game = null;
-                    output=resb.getString( "core.join.error.nothostname");
-                }
-                catch (IOException e) {
-                    game = null;
-                    output=resb.getString( "core.join.error.002");
-                }
-                catch (java.security.AccessControlException e) {
-                    game = null;
-                    output="AccessControlException:\n"+resb.getString( "core.error.applet");
-                }
-                catch (Exception e) { // catch not being able to make a new game, so game is null
-                    game=null; // just in case ;-)
-                    output=resb.getString( "core.join.error.create")+" "+e;
-                }
-
-
-                if (game==null) {
-                    showMessageDialog(output);
-                }
-
-                //}
-                //else {
-                //	output=resb.getString( "core.join.error.001");
-                //}
-            }
-            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "join server"); }
-
-        }
-
-        // NEW SERVER
-        else if (input.equals("startserver")) {
-
-            if (StringT.hasMoreTokens()==false) {
-
-                if ( p2pServer == null ) {
-
-                    // CREATE A SERVER
-                    try {
-
-                        p2pServer = new ChatArea(controller,port);
-
-                        output=resb.getString( "core.startserver.started");
-                        controller.serverState(true);
-
-                    }
-                    catch(Exception e) {
-
-                        p2pServer = null;
-                        output=resb.getString( "core.startserver.error")+" "+e;
-                        showMessageDialog(output);
-
-                    }
-
-                }
-                else {
-                    output=resb.getString( "core.startserver.error");
-                }
-            }
-            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "startserver"); }
-
-        }
+        noGameParser13(input,output,StringT);
+        noGameParser16(input,StringT,output);
+        noGameParser19(input,StringT,output);
         // KILL SERVER
-        else if (input.equals("killserver")) {
-
-            if (StringT.hasMoreTokens()==false) {
-
-                if ( p2pServer != null ) {
-
-                    try {
-
-                        // shut down the server
-                        //if (chatter.serverSocket != null) {
-                        //	chatter.serverSocket.close();
-                        //	chatter=null;
-                        //}
-
-                        if (p2pServer != null) {
-                            p2pServer.closeSocket();
-                            p2pServer=null;
-                        }
-
-                        output=resb.getString( "core.killserver.killed");
-                        controller.serverState(false);
-
-                    }
-                    catch (Exception e) {
-                        output=resb.getString( "core.killserver.error")+" "+e.getMessage();
-                    }
-
-
-                }
-                else {
-                    output=resb.getString( "core.killserver.noserver");
-                }
-            }
-            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "killserver"); }
-
-        }
-
-        else { // if there is no game and the command was unknown
-            output=resb.getString( "core.loadgame.nogame");
-        }
-
-        // if there was NO game
-
+        noGameParser20(input,StringT,output);
         controller.sendMessage(output, false, true );
-
         getInput();
-
     }
+    private void noGameParser12(StringTokenizer StringT,String output) {
+        if (StringT.hasMoreTokens()==false) {
+            noGameParser11(output);
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "startserver"); }
+    }
+    private void noGameParser11(String output) {
+        if ( p2pServer == null ) {
+            // CREATE A SERVER
+            try {
+                p2pServer = new ChatArea(controller,port);
+                output=resb.getString( "core.startserver.started");
+                controller.serverState(true);
+            }
+            catch(Exception e) {
+                p2pServer = null;
+                output=resb.getString( "core.startserver.error")+" "+e;
+                showMessageDialog(output);
+            }
+        }
+        else {
+            output=resb.getString( "core.startserver.error");
+        }
+    }
+    private void noGameParser7() throws IOException {
+        if (p2pServer != null) {
+            p2pServer.closeSocket();
+            p2pServer=null;
+        }
+    }
+    private void noGameParser10(StringTokenizer StringT, String output) {
+        if (StringT.hasMoreTokens()==false) {
+            noGameParser9(output);
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "killserver"); }
+    }
+    private void noGameParser9(String output) {
+        if ( p2pServer != null ) {
+            try {
+                noGameParser7();
+                output=resb.getString( "core.killserver.killed");
+                controller.serverState(false);
+            }
+            catch (Exception e) {
+                output=resb.getString( "core.killserver.error")+" "+e.getMessage();
+            }
 
+        }
+        else {
+            output=resb.getString( "core.killserver.noserver");
+        }
+    }
+    private String inGameParser2(List leavers, String id) {
+        int size = leavers.size();
+        String s = null;
+        for (int c=0; c< size ; c++) {
+            if ( !((Player)leavers.get(c)).getAddress().equals(id) ) {
 
-    /**
-     * This parses the string, calls the relavant method and displays the correct error messages
-     */
-    protected void inGameParser(final String message) {
+                s = ((Player)leavers.get(c)).getAddress();
+                break;
+            }
+        }
+        return s;
+    }
+    private void inGameParser3(Player patc) {
+        int value = game.getState();
+        while(!(value == RiskGame.STATE_NEW_GAME )) {
 
-        controller.sendDebug(message);
+            patc.setType( Player.PLAYER_AI_CRAP );
+            break;
+        }
+    }
+    private Player inGameParser4(Player patc, int c) {
+        Player p = patc;
+        if ( game.delPlayer( patc.getName() ) ) {
+            c--;
+            controller.delPlayer( patc.getName() );
+            p = null;
+        }
+        return p;
+    }
+    private Player inGameParser5(Player patc, int c) {
+        Player p = null;
+        int value = game.getState();
+        while(value == RiskGame.STATE_NEW_GAME ) {
+            // should never return false
+            p = inGameParser4(patc,c);
+            break;
+        }
+        return p;
+    }
+    private Player inGameParser6(Player patc, int c, String output) {
+        Player p = null;
+        int value = patc.getType();
+        while (value  == Player.PLAYER_HUMAN ) {
+            String out = output + patc.getName()+" ";
+            p = inGameParser5(patc,c);
+            inGameParser3(patc);
+            break;
+        }
+        return p;
+    }
+    private void inGameParser7(Player patc,String newPlayerAddress) {
+        if (patc!=null) {
+            while(newPlayerAddress!=null) {
+                patc.setAddress( newPlayerAddress );
+                break;
+            }
+        }
+    }
+    private void inGameParser8(List leavers, String id, String newPlayerAddress, String output) {
+        int size = leavers.size();
+        for (int c=0; c < size; c++) {
 
-        boolean needInput=true;
-        String output=null;
+            Player patc = ((Player)leavers.get(c));
+            if ( patc.getAddress().equals(id) ) {
+                patc = inGameParser6(patc,c,output);
+                inGameParser7(patc,newPlayerAddress);
+            }
 
-        StringTokenizer StringT = new StringTokenizer( message );
-        final String Addr = StringT.nextToken();
-
-
-        // ERROR is not related to the game
+        }
+    }
+    private void inGameParser9(StringTokenizer StringT,String Addr) {
+        if (Addr.equals("LEAVE")) {
+            String id = StringT.nextToken();
+            String output = "someone has gone: ";
+            List leavers = game.getPlayers();
+            String newPlayerAddress=null;
+            newPlayerAddress = inGameParser2(leavers,id);
+            inGameParser8(leavers,id,newPlayerAddress,output);
+        }
+    }
+    private void inGameParser10(String Addr, String message, StringTokenizer StringT) {
         if (!Addr.equals("ERROR")) {
             game.addCommand(message);
         }
-
-
         if (Addr.equals("ERROR")) { // server has sent us a error
-
             String Pname = StringT.nextToken();
-
-            while ( StringT.hasMoreTokens() ) {
+            boolean value = StringT.hasMoreTokens();
+            while (value) {
                 Pname = Pname +" "+ StringT.nextToken();
             }
-
             showMessageDialog(Pname);
-
         }
-        else if (Addr.equals("LEAVE")) {
-
-            String id = StringT.nextToken();
-
-            // @todo, do we set needinput to flase, so that ai wont go twice, if its there go
-            // but then if there needinput was ignored coz this command was in the inbox, no needinput will get called
-
-            // if it is NOT there go the set needinput to false
-            if (game.getCurrentPlayer()!=null && !(game.getCurrentPlayer().getAddress().equals(id) && game.getCurrentPlayer().getType() == Player.PLAYER_HUMAN)) {
-
-                needInput = false;
-
+    }
+    private void inGameParser11(int attSize, int defSize, StringTokenizer StringT, String output, int[] att, int[] def) {
+        for (int c=0; c< attSize ; c++) {
+            att[c] = RiskGame.getNumber(StringT.nextToken());
+            output = output + " " + (att[c]+1);
+        }
+        for (int c=0; c< defSize ; c++) {
+            def[c] = RiskGame.getNumber(StringT.nextToken());
+            String out = output + " " + (def[c]+1);
+        }
+    }
+    private String inGameParser12(int n,String output) {
+        String out = null;
+        if (n > 0) {
+            if (n > 3) { n=3; }
+            out = output + RiskUtil.replaceAll(resb.getString( "core.dice.attackagain"), "{0}", "" + n);
+        }
+        else {
+            out = output + resb.getString( "core.dice.noattackagain");
+        }
+        return out;
+    }
+    private String inGameParser13(int result[], String output) {
+        String s = null;
+        if ( result[4] == result[5] ) {
+            int noa = game.moveAll();
+            int ma = game.moveArmies( noa );
+            //Moved {0} armies to captured country.
+            s = output + RiskUtil.replaceAll(resb.getString( "core.dice.armiesmoved"), "{0}", String.valueOf(noa) );
+            if (ma==2) {
+                s=output + whoWon();
             }
-            // if this command stopped the last needInput from being called, then this will be screwed
-            // at worst AI or human wont get a chance to put any input in, game stalled
-
-            output = "someone has gone: ";
-
-            // get all the players and make all with the ip of the leaver become nutral
-            List leavers = game.getPlayers();
-
-            String newPlayerAddress=null;
-
-            // find the first player that is NOT playing on this computer
-            // this happens in the same way on each computer
-            for (int c=0; c< leavers.size() ; c++) {
-
-                if ( !((Player)leavers.get(c)).getAddress().equals(id) ) {
-
-                    newPlayerAddress = ((Player)leavers.get(c)).getAddress();
-                    break;
-                }
-
-            }
-
-
-            for (int c=0; c < leavers.size(); c++) {
-
-                Player patc = ((Player)leavers.get(c));
-
-                if ( patc.getAddress().equals(id) ) {
-
-                    while ( patc.getType() == Player.PLAYER_HUMAN ) {
-
-                        output = output + patc.getName()+" ";
-
-                        while(game.getState() == RiskGame.STATE_NEW_GAME ) {
-
-                            // should never return false
-                            if ( game.delPlayer( patc.getName() ) ) {
-
-                                c--;
-
-                                controller.delPlayer( patc.getName() );
-
-                                patc = null;
-                            }
-                            break;
-                        }
-                        while(!(game.getState() == RiskGame.STATE_NEW_GAME )) {
-
-                            patc.setType( Player.PLAYER_AI_CRAP );
-                            break;
-                        }
-                        break;
-                    }
-
-                    if (patc!=null) {
-
-                        while(newPlayerAddress!=null) {
-                            patc.setAddress( newPlayerAddress );
-                            break;
-                        }
-                    }
-
-                }
-
+        }
+        else {
+            //How many armies do you wish to move? ({0} to {1})
+            s=output + RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.dice.howmanyarmies")
+                    , "{0}", String.valueOf(result[4]) )
+                    , "{1}", String.valueOf(result[5]) );
+        }
+        return s;
+    }
+    private String inGameParser14(int[] result, String output) {
+        String s = null;
+        if (result[3]==0) {
+            int n=((Country)game.getAttacker()).getArmies()-1;
+            s=output + System.getProperty("line.separator") + resb.getString( "core.dice.notdefeated") + " ";
+            s = inGameParser12(n,output);
+        }
+        else {
+            s=output + System.getProperty("line.separator") + resb.getString( "core.dice.defeated") + " ";
+            s = inGameParser13(result,output);
+        }
+        return s;
+    }
+    private void inGameParser15(int[] att,int[] def) {
+        if ( battle ) {
+            controller.showDiceResults( att, def );
+            try{ Thread.sleep(SHOW_DICE_SLEEP); }
+            catch(InterruptedException e){
+                System.out.println("error");
             }
 
         }
-        else if (Addr.equals("DICE")) { // a server command
-
+    }
+    private void inGameParser16(String Addr, StringTokenizer StringT) {
+        String output = null;
+        if (Addr.equals("DICE")) {
             int attSize = RiskGame.getNumber(StringT.nextToken());
             int defSize = RiskGame.getNumber(StringT.nextToken());
-
             output=resb.getString( "core.dice.rolling") + System.getProperty("line.separator") + resb.getString( "core.dice.results");
-
             int att[] = new int[ attSize ];
             output = output + " " + resb.getString( "core.dice.attacker");
-            for (int c=0; c< attSize ; c++) {
-                att[c] = RiskGame.getNumber(StringT.nextToken());
-                output = output + " " + (att[c]+1);
-            }
-
             int def[] = new int[ defSize ];
             output = output + " " + resb.getString( "core.dice.defender");
-            for (int c=0; c< defSize ; c++) {
-                def[c] = RiskGame.getNumber(StringT.nextToken());
-                output = output + " " + (def[c]+1);
-            }
-
+            inGameParser11(attSize,defSize,StringT,output,att,def);
             output = output + System.getProperty("line.separator");
-
             int result[] = game.battle( att, def );
-
             if ( result[0]==1 ) {
                 output = output + RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.dice.result")
                         , "{0}", String.valueOf(result[2]) ) //defeated
                         , "{1}", String.valueOf(result[1]) );//lost
-
-
-                if (result[3]==0) {
-                    int n=((Country)game.getAttacker()).getArmies()-1;
-
-                    output=output + System.getProperty("line.separator") + resb.getString( "core.dice.notdefeated") + " ";
-
-                    if (n > 0) {
-                        if (n > 3) { n=3; }
-                        output=output + RiskUtil.replaceAll(resb.getString( "core.dice.attackagain"), "{0}", "" + n);
-
-//						Player attackingPlayer = ((Country)game.getAttacker()).getOwner();
-//
-//						if ( showHumanPlayerThereInfo( attackingPlayer ) ) {
-//							controller.showDice(n, true);
-//						}
-
-                    }
-                    else {
-                        output=output + resb.getString( "core.dice.noattackagain");
-                    }
-
-
-                }
-                else {
-
-//                                      // not needed any more
-//					Player attackingPlayer = ((Country)game.getAttacker()).getOwner();
-//
-//					if ( showHumanPlayerThereInfo( attackingPlayer ) ) {
-//						controller.setSlider( game.getMustMove(), game.getAttacker().getColor(), game.getDefender().getColor() );
-//					}
-
-                    output=output + System.getProperty("line.separator") + resb.getString( "core.dice.defeated") + " ";
-
-                    if ( result[3]==2 ) {
-                        output=output + resb.getString( "core.dice.eliminated") + " ";
-                    }
-
-                    // if there is only one amount of troops u can move
-                    if ( result[4] == result[5] ) {
-
-                        int noa = game.moveAll();
-
-                        int ma = game.moveArmies( noa );
-
-                        //Moved {0} armies to captured country.
-                        output=output + RiskUtil.replaceAll(resb.getString( "core.dice.armiesmoved"), "{0}", String.valueOf(noa) );
-
-                        if (ma==2) {
-
-                            output=output + whoWon();
-
-                        }
-
-                    }
-                    else {
-                        //How many armies do you wish to move? ({0} to {1})
-                        output=output + RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.dice.howmanyarmies")
-                                , "{0}", String.valueOf(result[4]) )
-                                , "{1}", String.valueOf(result[5]) );
-                    }
-
-
-                }
-
-                if ( battle ) {
-
-                    controller.showDiceResults( att, def );
-
-                    try{ Thread.sleep(SHOW_DICE_SLEEP); }
-                    catch(InterruptedException e){}
-
-                }
-
+                output = inGameParser14(result,output);
+                inGameParser15(att,def);
             }
             else { output=resb.getString( "core.dice.error.unabletoroll"); }
-
-            // ==1 this fixes the automove bug, when u need to trade after rolling and automove
-            if ( game.getState()!=RiskGame.STATE_ROLLING && game.getState()!=RiskGame.STATE_DEFEND_YOURSELF) {
-
-                closeBattle();
-
-            }
-
         }
-        else if (Addr.equals("PLAYER")) { // a server command
-
+    }
+    private void inGameParser17(String Addr, StringTokenizer StringT) {
+        String output = null;
+        boolean needInput = true;
+        if (Addr.equals("PLAYER")) { // a server command
             int index = Integer.parseInt( StringT.nextToken() );
-
             Player p = game.setCurrentPlayer( index );
-
             controller.sendMessage("Game started", false, false);
-
-            // moved to startgame for lobby
-            //if ( chatSocket != null ) {
-            //	controller.startGame(false);
-            //}
-            //else {
-            //	controller.startGame(true);
-            //}
-
             output=RiskUtil.replaceAll(resb.getString( "core.player.randomselected"), "{0}", p.getName());
-
             if ( game.getGameMode()==RiskGame.MODE_SECRET_MISSION || autoplaceall==true ) {
                 needInput=false;
             }
             else {
                 saveGameToUndoObject();
             }
-
         }
-        else if (Addr.equals("CARD")) { // a server command
-
-            // if the player deserves a card
+    }
+    private void inGameParser18(String name, Card card) {
+        if ( showHumanPlayerThereInfo() ) {
+            String cardName;
+            if (name.equals(Card.WILDCARD)) {
+                cardName = name;
+            }
+            else {
+                cardName = card.getName() + " " + game.getCountryInt( Integer.parseInt(name) ).getName();
+            }
+            controller.sendMessage("You got a new card: \"" + cardName +"\"", false , false);
+        }
+    }
+    private void inGameParser19(String Addr, StringTokenizer StringT) {
+        String output = null;
+        if (Addr.equals("CARD")) {
             if ( StringT.hasMoreTokens() ) {
-
-                // get the cards
-                //Vector cards = game.getCards();
                 String name = StringT.nextToken();
                 Card card = game.findCardAndRemoveIt( name );
-
                 ((Player)game.getCurrentPlayer()).giveCard( card );
-
-                if ( showHumanPlayerThereInfo() ) {
-
-                    String cardName;
-
-                    if (name.equals(Card.WILDCARD)) {
-                        cardName = name;
-                    }
-                    else {
-                        cardName = card.getName() + " " + game.getCountryInt( Integer.parseInt(name) ).getName();
-                    }
-
-                    controller.sendMessage("You got a new card: \"" + cardName +"\"", false , false);
-                }
+                inGameParser18(name,card);
             }
-
             Player newplayer = game.endGo();
-
             output = RiskUtil.replaceAll(resb.getString( "core.player.newselected"), "{0}", newplayer.getName());
-
-            // this is not a bug! (Easter egg)
-            if ( unlimitedLocalMode && game.getSetupDone() && newplayer.getName().equals("Theo")) { newplayer.addArmies( newplayer.getExtraArmies() ); }
-
             saveGameToUndoObject();
 
-
         }
-        else if (Addr.equals("PLACE")) { // a server command
-
+    }
+    private void inGameParser20(String Addr, StringTokenizer StringT) {
+        String output = null;
+        if (Addr.equals("PLACE")) { // a server command
             Country c = game.getCountryInt( Integer.parseInt( StringT.nextToken() ) );
             game.placeArmy( c ,1);
             controller.sendMessage( RiskUtil.replaceAll( resb.getString( "core.place.oneplacedin"), "{0}", c.getName()) , false, false); // Display
             output=resb.getString( "core.place.autoplaceok");
-
         }
-        else if (Addr.equals("PLACEALL")) { // a server command
-
-            for (int c=0; c< game.getNoCountries() ; c++) {
-
+    }
+    private void inGameParser21(String Addr, StringTokenizer StringT) {
+        String output = null;
+        if (Addr.equals("PLACEALL")) { // a server command
+            int value = game.getNoCountries();
+            for (int c=0; c< value; c++) {
                 Country t = game.getCountryInt( Integer.parseInt( StringT.nextToken() ) );
                 game.placeArmy( t ,1);
                 controller.sendMessage( RiskUtil.replaceAll(RiskUtil.replaceAll( resb.getString("core.place.getcountry")
@@ -1023,1085 +866,796 @@ public class Risk extends Thread {
                         , false, false);
                 game.endGo();
             }
-
-            // the game is saved
             saveGameToUndoObject();
-
             controller.sendMessage("Auto place all successful.", false, false);
             //New player selected: {0}.
             output= RiskUtil.replaceAll( resb.getString( "core.player.newselected"), "{0}", ((Player)game.getCurrentPlayer()).getName());
+        }
+    }
+    private void inGameParser22(String echo) {
+        if (game != null && game.getCurrentPlayer() != null && game.getState()!=RiskGame.STATE_GAME_OVER ) {
+            int type = game.getCurrentPlayer().getType();
+            String key;
+            if (type==Player.PLAYER_HUMAN) {
+                key = "newgame.player.type.human";
+            }
+            else {
+                key = "newgame.player.type."+ai.getCommandFromType(type)+"ai";
+            }
+            String typeString;
+            try {
+                typeString = resb.getString(key);
+            }
+            catch (MissingResourceException ex) {
+                typeString = key;
+            }
+            controller.sendMessage( game.getCurrentPlayer().getName()+ "("+typeString+")>"+echo, false, false );
+        }
+        else {
+            controller.sendMessage( "game>" + echo, false, false );
+        }
+    }
+    private void inGameParser23(Object data, String filename, Exception e) {
+        if (data == RiskUtil.SUCCESS) {
+            try {
+                setMap(filename);
+            }
+            catch (Exception ex) {
+                getMapError(ex.toString());
+            }
+        }
+        else {
+            getMapError(e.toString());
+        }
+    }
+    private void inGameParser24(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.countTokens() >= 1) {
+            final String filename = RiskUtil.getAtLeastOne(StringT);
+            try {
+                setMap(filename);
+            }
+            catch (final Exception e) {
+                RiskUtil.streamOpener.getMap(filename, new Observer() {
+                    @Override
+                    public void update(Observable observable, Object data) {
+                        inGameParser23(data,filename,e);
+                    }
+                });
+            }
+            output = null; // we have nothing to output now
 
         }
-        else if (Addr.equals("MISSION")) { // a server command
+        else  { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "choosemap filename"); }
+    }
+    private void inGameParser25(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.countTokens() >= 1) {
+            String filename = RiskUtil.getAtLeastOne(StringT);
+            try {
+                boolean yesmissions = game.setCardsfile(filename);
+                controller.showCardsFile( game.getCardsFile() , yesmissions );
+                output=RiskUtil.replaceAll(resb.getString( "core.choosecards.chosen"), "{0}", filename);
+            }
+            catch (Exception e) {
+                output=resb.getString( "core.choosecards.error.unable");
+            }
+        }
+        else  { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "choosecards filename"); }
+    }
+    private void inGameParser26(String input, StringTokenizer StringT) {
+        if (input.equals("choosemap")) {
+            inGameParser24(StringT);
+        }
+        if (input.equals("choosecards")) {
+            inGameParser25(StringT);
+        }
+    }
+    private void inGameParser27(int color, String name, String Addr, int t, String c) {
+        String output = null;
+        if ( color != 0 && t != -1 && !name.equals("") &&
+                ((unlimitedLocalMode && game.addPlayer(t, name, color, "LOCALGAME"))
+                        || (!unlimitedLocalMode && game.addPlayer(t, name, color, Addr)))) {
+            //New player created, name: {0} color: {1}
+            output=RiskUtil.replaceAll(RiskUtil.replaceAll( resb.getString("core.newplayer.created")
+                    , "{0}", name)
+                    , "{1}", c);
 
+            controller.addPlayer(t, name, color, Addr);
+        }
+        else { output=resb.getString( "core.newplayer.error.unable"); }
+    }
+    private void inGameParser28(StringTokenizer StringT, String name) {
+        String n  = null;
+        boolean value = StringT.hasMoreTokens();
+        while (value) {
+            n = name + StringT.nextToken();
+            if ( StringT.hasMoreTokens() ) { n = name + " "; }
+        }
+    }
+    private void inGameParser29(StringTokenizer StringT, String Addr) {
+        String output = null;
+        if (StringT.countTokens()>=3) {
+            String type=StringT.nextToken();
+            if (type.equals("ai")) {
+                type = type+" "+StringT.nextToken();
+            }
+            String c=StringT.nextToken();
+            String name="";
+            inGameParser28(StringT,name);
+            int t=getType(type);
+            int color=ColorUtil.getColor( c );
+            inGameParser27(color,name,Addr,t,c);
+        }
+        else  {
+            output=RiskUtil.replaceAll( resb.getString( "core.error.syntax"), "{0}", "newplayer type (skill) color name");
+        }
+    }
+    private void inGame2(String name, StringTokenizer StringT) {
+        String output;
+        if ( game.delPlayer(name) ) {
+            controller.delPlayer(name);
+            output=RiskUtil.replaceAll(resb.getString( "core.delplayer.deleted"), "{0}", name);
+        }
+        else { output=resb.getString( "core.delplayer.error.unable"); }
+    }
+    private void inGameParser30(String input, StringTokenizer StringT) {
+        String output = null;
+        if (input.equals("delplayer")) {
+            if (StringT.countTokens() >= 1) {
+                String name=RiskUtil.getAtLeastOne(StringT);
+                inGame2(name,StringT);
+            }
+            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "delplayer name"); }
+        }
+    }
+    private void inGameParser31(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            output=resb.getString( "core.info.title") + "\n";
+            List players = game.getPlayers();
+            int value = players.size();
+            for (int a=0; a< value; a++) {
+                output = output + resb.getString( "core.info.player") + " " + ((Player)players.get(a)).getName() +"\n";
+            }
+            output = output + resb.getString( "core.info.mapfile") + " "+ game.getMapFile() +"\n";
+            output = output + resb.getString( "core.info.cardsfile") + " "+ game.getCardsFile() ;
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "info"); }
+    }
+    private void inGameParser32(String input, StringTokenizer StringT, String Addr) {
+        if (input.equals("newplayer")) {
+            inGameParser29(StringT,Addr);
+        }
+        inGameParser30(input,StringT);
+    }
+    private void inGameParser33() {
+        String output = null;
+        if (!replay) {
+            int value = RiskGame.MAX_PLAYERS;
+            for (int c=1;c<=value;c++) {
+                parser("newplayer " + riskconfig.getProperty("default.player"+c+".type")+" "+ riskconfig.getProperty("default.player"+c+".color")+" "+ riskconfig.getProperty("default.player"+c+".name") );
+            }
+            output = resb.getString( "core.info.autosetup");
+        }
+        else {
+            output = "replay mode, nothing done";
+        }
+    }
+    private void inGameParser34(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            if ( game.getPlayers().size() == 0) {
+                inGameParser33();
+            }
+            else {
+                output = resb.getString( "core.info.autosetup.error");
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autosetup"); }
+    }
+    private void inGameParser35(int b,StringBuffer outputa, int a,Random r) {
+        for (int c=0; c< b ; c++) {
+            if (outputa.length()!=0 ) {
+                outputa.append(' ');
+            }
+            outputa.append( r.nextInt(a) );
+            a--;
+        }
+    }
+    private void inGameParser36(String Addr) {
+        if (game.getGameMode()== RiskGame.MODE_SECRET_MISSION ) {
+            Random r = new Random();
+            int a = game.getNoMissions();
+            int b = game.getNoPlayers();
+            StringBuffer outputa=new StringBuffer();
+            inGameParser35(b,outputa,a,r);
+            gameCommand(Addr, "MISSION", outputa.toString());
+        }
+    }
+    private void inGameParser37(String Addr) {
+        if ( game.getGameMode()==RiskGame.MODE_SECRET_MISSION || autoplaceall ) {
+            List a = game.shuffleCountries();
+            StringBuffer outputb=new StringBuffer();
+            int size = a.size();
+            for (int c=0; c< size; c++) {
+                if (outputb.length()!=0 ) {
+                    outputb.append(' ');
+                }
+                outputb.append( ((Country)a.get(c)).getColor() );
+            }
+            gameCommand(Addr, "PLACEALL", outputb.toString());
+        }
+    }
+    private void inGameParser38(String Addr) {
+        String output;
+        boolean needInput;
+        if (game.getState() != RiskGame.STATE_NEW_GAME ) {
+            controller.noInput();
+            controller.startGame( unlimitedLocalMode );
+            if ( shouldGameCommand(Addr) ) {
+                gameCommand(Addr, "PLAYER", String.valueOf( game.getRandomPlayer() ) );
+                inGameParser36(Addr);
+                inGameParser37(Addr);
+            }
+            output=null;
+            needInput=false;
+        }
+        else {
+            output=resb.getString( "core.start.error.players");
+        }
+    }
+    private void inGameParser39(String crap, int newgame_type, int newgame_cardType, int n, String Addr, boolean newgame_autoplaceall) {
+        String output;
+        if (crap==null) {
+            // checks all the options are correct to start a game
+            if ( newgame_type!=-1 && newgame_cardType!=-1 && n>=2 && n<=RiskGame.MAX_PLAYERS) {
+                autoplaceall = newgame_autoplaceall;
+            }
+            inGameParser38(Addr);
+        }
+        else {
+            output="unknown option: "+crap;
+        }
+    }
+    private void inGameParser40(StringTokenizer StringT,String Addr) {
+        String output;
+        if (StringT.countTokens() >= 2 && StringT.countTokens() <= 4) {
+            int n=game.getPlayers().size();
+            int newgame_type = -1;
+            int newgame_cardType = -1;
+            boolean newgame_autoplaceall = false;
+            boolean newgame_recycle = false;
+            boolean threeDice = false;
+            String crap = null;
+            inGameParser39(crap,newgame_type,newgame_cardType,n,Addr,newgame_autoplaceall);
+        }
+        else {
+            output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "startgame gametype cardtype (autoplaceall recycle)");
+        }
+    }
+    private void inGameParser41(StringTokenizer StringT) {
+        String output;
+        if (StringT.countTokens() >= 1) {
+            String filename = RiskUtil.getAtLeastOne(StringT);
+            try {
+                URL url;
+                url = (new File(filename)).toURI().toURL();
+                BufferedReader bufferin=new BufferedReader(new InputStreamReader(url.openStream()));
+                replay = true;
+                output="playing \""+filename+"\"";
+            }
+            catch(Exception error) {
+                output="unable to play \""+filename+"\" "+error;
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "play filename"); }
+    }
+    private void inGameParser42(String input,StringTokenizer StringT, String Addr) {
+        if (input.equals("autosetup")) {
+            inGameParser34(StringT);
+        }
+        if (input.equals("startgame")) {
+            inGameParser40(StringT,Addr);
+        }
+    }
+    private void inGameParser43() throws IOException,ClassNotFoundException {
+        String output;
+        if (game.getState()!=RiskGame.STATE_DEFEND_YOURSELF && Undo!=null && Undo.size()!=0) {
+            //game = (RiskGame)Undo.getObject( nullCipher );
+            ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(Undo.toByteArray()));
+            game = (RiskGame)in.readObject();
+            output =resb.getString( "core.undo.undone");
+        }
+        else {
+            output =resb.getString( "core.undo.error.unable");
+        }
+    }
+    private void inGameParser44(StringTokenizer StringT) {
+        String output = null;
+        if ( StringT.hasMoreTokens()==false ) {
+            if ( unlimitedLocalMode ) {
+                try {
+                    // can not undo when defending yourself as it is not really your go
+                    inGameParser43();
+                }
+                catch (Exception e) {
+                    logger.log(Level.WARNING, resb.getString( "core.loadgame.error.undo"),e);
+                }
+            }
+            else {
+                output = resb.getString( "core.undo.error.network");
+            }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "undo"); }
+    }
+    private void inGameParser45(String input, StringTokenizer StringT, boolean aiPlayer) {
+        if (input.equals("undo")) {
+            if(game.getState()!=RiskGame.STATE_GAME_OVER && aiPlayer) {
+                throw new IllegalArgumentException("ai is trying to call undo");
+            }
+            inGameParser44(StringT);
+        }
+    }
+    private void inGameParser46(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            if ( showHumanPlayerThereInfo() ) {
+                output = resb.getString( "core.showmission.mission") + " " + getCurrentMission();
+            }
+            else { output=resb.getString( "core.showmission.error"); }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "showmission"); }
+    }
+    private void inGameParser47(Country[] v, int c) {
+        String output = null;
+        if (game.getGameMode() == 2 && game.getSetupDone() && game.getState() !=RiskGame.STATE_SELECT_CAPITAL) {
+            List players = game.getPlayers();
+            int size = players.size();
+            for (int a=0; a< size; a++) {
+                if ( ((Player)players.get(a)).getCapital() != null && ((Player)players.get(a)).getCapital() == v[c]) {
+                    output = output + " " + RiskUtil.replaceAll( resb.getString( "core.showarmies.captial")
+                            , "{0}", ((Player)players.get(a)).getName());
+                }
+            }
+        }
+    }
+    private void inGameParser48(Country[] v) {
+        String output = null;
+        int length = v.length;
+        for (int c=0; c< length ; c++) {
+            output = output + v[c].getColor() + " " + v[c].getName()+" - "; // Display
+            if ( v[c].getOwner() != null ) {
+                output = output + ((Player)v[c].getOwner()).getName() +" ("+v[c].getArmies() +")";
+                inGameParser47(v, c);
+                output = output + System.getProperty("line.separator");
+            }
+            else {
+                output = output + resb.getString( "core.showarmies.noowner") + System.getProperty("line.separator");
+            }
+        }
+    }
+    private void inGameParser49(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            if ( game.getState() != RiskGame.STATE_NEW_GAME) {
+                Country[] v = game.getCountries();
+                output=resb.getString( "core.showarmies.countries") + System.getProperty("line.separator");
+                inGameParser48(v);
+            }
+            else { output=resb.getString( "core.showarmies.error.unable"); }
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "showarmies"); }
+    }
+    private void inGameParser50(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            String strSelected;
+            if ( game.getCurrentPlayer().getAutoEndGo() ) {
+                strSelected = "core.autoendgo.on";
+            }
+            else {
+                strSelected = "core.autoendgo.off";
+            }
+            output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( strSelected));
+        }
+    }
+    private void inGameParser51(String option) {
+        String output = null;
+        if (option.equals("on") ) {
+            game.getCurrentPlayer().setAutoEndGo(true);
+            output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( "core.autoendgo.on"));
+        }
+        else if (option.equals("off") ) {
+            game.getCurrentPlayer().setAutoEndGo(false);
+            output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( "core.autoendgo.off"));
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.autoendgo.error.unknown"), "{0}", option); }
+    }
+    private void inGameParser52(String option) {
+        String output = null;
+        if (option.equals("on") ) {
+            game.getCurrentPlayer().setAutoDefend(true);
+            output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( "core.autodefend.on"));
+        }
+        inGameParser51(option);
+        if (option.equals("off") ) {
+            game.getCurrentPlayer().setAutoDefend(false);
+            output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( "core.autodefend.off"));
+        }
+        else { output=RiskUtil.replaceAll(resb.getString( "core.autodefend.error.unknown"), "{0}", option); }
+    }
+    private void inGameParser53(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            String strSelected;
+            if ( game.getCurrentPlayer().getAutoDefend() ) {
+                strSelected = "core.autodefend.on";
+            }
+            else {
+                strSelected = "core.autodefend.on";
+            }
+            output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( strSelected));
+        }
+    }
+    private void inGameParser54(String Addr, StringTokenizer StringT) {
+        String output = null;
+        boolean needInput;
+        if (Addr.equals("MISSION")) { // a server command
             List m = game.getMissions();
             List p = game.getPlayers();
-
-            for (int c=0; c< p.size() ; c++) {
+            int size = p.size();
+            for (int c=0; c< size; c++) {
 
                 int i = RiskGame.getNumber( StringT.nextToken() );
                 ((Player)p.get(c)).setMission( (Mission)m.get(i) );
                 m.remove(i);
-
             }
-
             output=null;
             needInput=false;
+        }
+    }
+    private void inGameParser55(String input, StringTokenizer StringT) {
+        String output = null;
+        if (input.equals("autoendgo")) {
+            inGameParser50(StringT);
+            if (StringT.countTokens() == 1) {
+                String option = StringT.nextToken();
+            }
+            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autoendgo on/off"); }
+        }
+    }
+
+    private void inGameParser60(boolean a, Country country2,Country country1) {
+        String output = null;
+        if ( a ) {
+            //Attack {0} ({1}) with {2} ({3}). (You can use up to {4} dice to attack)
+            output = RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.attack.attacking")
+                    , "{0}", country2.getName()) // Display
+                    , "{1}", "" + country2.getArmies())
+                    , "{2}", country1.getName()) // Display
+                    , "{3}", "" + country1.getArmies())
+                    , "{4}", "" + game.getNoAttackDice() );
 
         }
-        else if (Addr.equals("RENAME")) {
-            Map map = Url.toHashtable( message.substring( Addr.length()+1 ) );
+        else { throw new IllegalArgumentException(resb.getString( "core.attack.error.unable")); }
+    }
+    private void inGameParser61(int a1, int a2) {
+        Country country1;
+        Country country2;
 
+        if (a1 != -1) {
+            country1=game.getCountryInt(a1);
+        }
+        else {
+            //YURA:LANG country1=game.getCountryByName(arg1);
+            country1=null;
+        }
+        if (a2 != -1) {
+            country2=game.getCountryInt(a2);
+        }
+        else {
+            //YURA:LANG country2=game.getCountryByName(arg2);
+            country2=null;
+        }
+        boolean a=game.attack(country1, country2);
+        inGameParser60(a,country2,country1);
+    }
+    private void inGameParser62(String input, StringTokenizer StringT) {
+        if (input.equals("attack")) {
+            if (StringT.countTokens()==2) {
+                String arg1=StringT.nextToken();
+                String arg2=StringT.nextToken();
+                int a1=RiskGame.getNumber(arg1);
+                int a2=RiskGame.getNumber(arg2);
+                inGameParser61(a1,a2);
+            }
+            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "attack country country")); }
+        }
+    }
+    private void inGameParser63(StringTokenizer StringT) {
+        String output = null;
+        if (StringT.hasMoreTokens()==false) {
+            if ( game.endAttack() ) {
+                output=resb.getString( "core.attack.end.ended");
+            }
+            else { throw new IllegalArgumentException(resb.getString( "core.attack.end.error.unable")); }
+        }
+        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"),
+                "{0}", "endattack")); }
+    }
+    private void inGameParser64(String input, StringTokenizer StringT) {
+        if (game.getState()==RiskGame.STATE_ATTACKING) {
+            inGameParser62(input,StringT);
+            if (input.equals("endattack")) {
+                inGameParser63(StringT);
+            }
+            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "attack, endattack")); }
+
+        }
+    }
+
+    private void inGameParser68(String input, StringTokenizer StringT) {
+        String output;
+        if (input.equals("autodefend")) {
+            inGameParser53(StringT);
+            if (StringT.countTokens() == 1) {
+                String option = StringT.nextToken();
+                inGameParser52(option);
+            }
+            else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autodefend on/off"); }
+        }
+    }
+    private void inGameParser69(String input, StringTokenizer StringT) {
+        if (input.equals("showmission")) {
+            inGameParser46(StringT);
+        }
+        if (input.equals("showarmies")) {
+            inGameParser49(StringT);
+        }
+    }
+    private void inGameParser70(Country country1,Country country2, int noa) {
+        String output = null;
+        if ( game.moveArmy(country1, country2, noa) ) {
+            //Moved {0} armies from {1} to {2}.
+            output = RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.tacmove.movedfromto")
+                    , "{0}", "" + noa)
+                    , "{1}", country1.getName()) // Display
+                    , "{2}", country2.getName()); // Display
+        }
+        else { throw new IllegalArgumentException(resb.getString( "core.tacmove.error.unable")); }
+    }
+    private void inGameParser71(int a1, int a2, StringTokenizer StringT) {
+        Country country1;
+        Country country2;
+        if (a1 != -1) {
+            country1=game.getCountryInt(a1);
+        }
+        else {
+            //YURA:LANG country1=game.getCountryByName(arg1);
+            country1=null;
+        }
+        if (a2 != -1) {
+            country2=game.getCountryInt(a2);
+        }
+        else {
+            //YURA:LANG country2=game.getCountryByName(arg2);
+            country2=null;
+        }
+        int noa=RiskGame.getNumber( StringT.nextToken() );
+        inGameParser70(country1,country2,noa);
+    }
+    private void inGameParser72(String input, StringTokenizer StringT) {
+        if (input.equals("movearmies")) {
+            if (StringT.countTokens()==3) {
+                String arg1=StringT.nextToken();
+                String arg2=StringT.nextToken();
+                int a1=RiskGame.getNumber(arg1);
+                int a2=RiskGame.getNumber(arg2);
+                inGameParser71(a1,a2,StringT);
+            }
+            else {
+                throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString(
+                        "core.error.syntax"), "{0}", "movearmies country country number")); }
+        }
+    }
+    private void inGameParser73(String input, StringTokenizer StringT) {
+        boolean needInput;
+        String output;
+        if (input.equals("endgo")) {
+            if (StringT.hasMoreTokens()==false) {
+                needInput=false;
+                output=null;
+                controller.sendMessage(resb.getString( "core.endgo.ended"), false , false);
+                DoEndGo();
+            }
+            else {
+                throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString(
+                        "core.error.syntax"), "{0}", "endgo")); }
+        }
+        else {
+            throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"),
+                    "{0}", "emdgo")); }
+    }
+    private void inGameParser75(String input, StringTokenizer StringT) {
+        if (game.getState()==RiskGame.STATE_FORTIFYING) {
+            inGameParser72(input,StringT);
+        }
+        if (game.getState()==RiskGame.STATE_END_TURN) {
+            inGameParser73(input,StringT);
+        }
+    }
+    private void inGameParser76(Country t) {
+        String output = null;
+        if ( t != null && game.setCapital(t) ) {
+            if ( showHumanPlayerThereInfo() ) {
+                output=RiskUtil.replaceAll(resb.getString( "core.capital.selected"), "{0}", t.getName()); // Display
+            }
+            else {
+                output=resb.getString( "core.capital.hasbeenselected");
+            }
+        }
+        else {
+            throw new IllegalArgumentException(resb.getString( "core.capital.error.unable")); }
+    }
+    private void inGameParser77(int nCountryId, Country t) {
+        if (nCountryId != -1) {
+            t = game.getCountryInt( nCountryId);
+        } else {
+            //YURA:LANG t = game.getCountryByName( strCountry);
+            t=null;
+        }
+    }
+    private void inGameParser78(StringTokenizer StringT) {
+        if (StringT.countTokens()==1) {
+            String strCountry = StringT.nextToken();
+            int nCountryId = RiskGame.getNumber(strCountry);
+            Country t = null;
+            inGameParser77(nCountryId,t);
+            inGameParser76(t);
+        }
+        else {
+            throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString(
+                    "core.error.syntax"), "{0}", "capital country")); }
+    }
+    private void inGameParser79(String input, StringTokenizer StringT) {
+        if (game.getState()==RiskGame.STATE_SELECT_CAPITAL) {
+            if (input.equals("capital")) {
+                inGameParser78(StringT);
+            }
+            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "capital")); }
+        }
+    }
+    private void inGameParser80(String input, StringTokenizer StringT) {
+        String output;
+        if (input.equals("play")) {
+            inGameParser41(StringT);
+        }
+        else {
+            output=RiskUtil.replaceAll(resb.getString( "core.error.incorrect"),
+                    "{0}", "newplayer, delplayer, startgame, choosemap, choosecards, info, autosetup"); }
+    }
+    private void inGameParser81(int[] attackerResults,int[] defenderResults) {
+        String serverRoll = null;
+        int size1 = attackerResults.length;
+        for (int c=0; c< size1; c++) {
+            serverRoll = serverRoll + attackerResults[c] + " ";
+        }
+        int size2 = defenderResults.length;
+        for (int c=0; c<  size2; c++) {
+            serverRoll = serverRoll + defenderResults[c] + " ";
+        }
+    }
+    private void inGameParser82(String Addr) {
+        if ( shouldGameCommand(Addr) ) { // recursive call
+            int[] attackerResults = game.rollDice( game.getAttackerDice() );
+            int[] defenderResults = game.rollDice( game.getDefenderDice() );
+            String serverRoll = "";
+            serverRoll = serverRoll + attackerResults.length + " ";
+            serverRoll = serverRoll + defenderResults.length + " ";
+            inGameParser81(attackerResults,defenderResults);
+            gameCommand(Addr, "DICE", serverRoll );
+        }
+    }
+    private void inGameParser83(int dice) {
+        if ( battle ) {
+            controller.setNODDefender(dice);
+            try{ Thread.sleep(ROLL_DICE_SLEEP); }
+            catch(InterruptedException e){
+                System.out.println("null");
+            }
+        }
+    }
+    private void inGameParser84(int dice, String Addr) {
+        String output;
+        boolean needInput;
+        if ( dice != -1 && game.rollD(dice) ) {
+            inGameParser83(dice);
+            // client does a roll, and this is not called
+            inGameParser82(Addr);
+            output=null;
+            needInput=false;
+        }
+        else { throw new IllegalArgumentException(resb.getString( "core.roll.error.unable")); }
+    }
+    private void inGameParse85(String input, StringTokenizer StringT, String Addr) {
+        if (input.equals("roll")) {
+            if (StringT.countTokens()==1) {
+                int dice=RiskGame.getNumber( StringT.nextToken() );
+                inGameParser84(dice,Addr);
+            }
+            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "roll number")); }
+        }
+        else {
+            throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString(
+                    "core.error.incorrect"), "{0}", "roll")); }
+    }
+    private void inGameParser86(String input, StringTokenizer StringT, String Addr) {
+        if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
+            inGameParse85(input,StringT,Addr);
+        }
+        else { throw new IllegalStateException(resb.getString( "core.error.unknownstate")); }
+    }
+    private void inGameParser87(String input, StringTokenizer StringT, String Addr) {
+        String output;
+        if (game.getState()==RiskGame.STATE_NEW_GAME) {
+            inGameParser26(input,StringT);
+            inGameParser32(input,StringT,Addr);
+            inGameParser31(StringT);
+            inGameParser42(input,StringT,Addr);
+            inGameParser55(input,StringT);
+            inGameParser80(input,StringT);
+        }
+        else {
+            boolean aiPlayer = game.getCurrentPlayer().getType()!=Player.PLAYER_HUMAN;
+            try {
+                // UNDO
+                inGameParser45(input,StringT,aiPlayer);
+                inGameParser69(input,StringT);
+                inGameParser68(input,StringT);
+                inGameParser64(input,StringT);
+                inGameParser75(input,StringT);
+                inGameParser79(input,StringT);
+                inGameParser86(input,StringT,Addr);
+            }
+            catch (IllegalArgumentException ex) {
+                output=ex.getMessage();
+            }
+        }
+    }
+    private void inGameParser88(String Addr, String message, StringTokenizer StringT) {
+        String output;
+        if (Addr.equals("RENAME")) {
+            Map map = Url.toHashtable( message.substring( Addr.length()+1 ) );
             String oldName = (String)map.get("oldName");
             String newName = (String)map.get("newName");
             String newAddress = (String)map.get("newAddress");
             int newType = Integer.parseInt((String)map.get("newType"));
-            
             renamePlayer(oldName,newName,newAddress,newType);
-            /*
-            try {
-                renamePlayer(oldName,newName,newAddress,newType);
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            */
         }
-        else { // parse this normal cammand
-
+        else {
             String echo = message.substring( Addr.length()+1 );
-
-            if (game != null && game.getCurrentPlayer() != null && game.getState()!=RiskGame.STATE_GAME_OVER ) {
-
-                int type = game.getCurrentPlayer().getType();
-
-                String key;
-                if (type==Player.PLAYER_HUMAN) {
-                    key = "newgame.player.type.human";
-                }
-                else {
-                    key = "newgame.player.type."+ai.getCommandFromType(type)+"ai";
-                }
-
-                String typeString;
-                try {
-                    typeString = resb.getString(key);
-                }
-                catch (MissingResourceException ex) {
-                    // fallback just in case
-                    typeString = key;
-                }
-
-                controller.sendMessage( game.getCurrentPlayer().getName()+ "("+typeString+")>"+echo, false, false );
-            }
-            else {
-                controller.sendMessage( "game>" + echo, false, false );
-            }
-
-            //if (StringT.hasMoreTokens()) {
-
+            inGameParser22(echo);
             String input=StringT.nextToken();
             output="";
-
-            if (game.getState()==RiskGame.STATE_NEW_GAME) {
-
-                if (input.equals("choosemap")) {
-
-                    if (StringT.countTokens() >= 1) {
-                        final String filename = RiskUtil.getAtLeastOne(StringT);
-
-                        try {
-                            setMap(filename);
-                        }
-                        catch (final Exception e) {
-                            // crap, we wanted to use this map, but we would not load it
-                            // maybe we can download it from the server and then use it
-                            RiskUtil.streamOpener.getMap(filename, new Observer() {
-                                @Override
-                                public void update(Observable observable, Object data) {
-                                    if (data == RiskUtil.SUCCESS) {
-                                        try {
-                                            setMap(filename);
-                                        }
-                                        catch (Exception ex) {
-                                            getMapError(ex.toString());
-                                        }
-                                    }
-                                    else {
-                                        getMapError(e.toString());
-                                    }
-                                }
-                            });
-                        }
-                        output = null; // we have nothing to output now
-
-                    }
-                    else  { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "choosemap filename"); }
-
-                }
-                else if (input.equals("choosecards")) {
-
-                    if (StringT.countTokens() >= 1) {
-                        String filename = RiskUtil.getAtLeastOne(StringT);
-
-                        try {
-
-                            boolean yesmissions = game.setCardsfile(filename);
-
-                            controller.showCardsFile( game.getCardsFile() , yesmissions );
-                            //New cards file selected: "{0}"
-                            output=RiskUtil.replaceAll(resb.getString( "core.choosecards.chosen"), "{0}", filename);
-                        }
-                        catch (Exception e) {
-                            output=resb.getString( "core.choosecards.error.unable");
-                        }
-                    }
-                    else  { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "choosecards filename"); }
-
-                }
-                else if (input.equals("newplayer")) {
-
-                    if (StringT.countTokens()>=3) {
-
-                        String type=StringT.nextToken();
-                        if (type.equals("ai")) {
-                            type = type+" "+StringT.nextToken();
-                        }
-
-                        String c=StringT.nextToken();
-
-                        String name="";
-                        while ( StringT.hasMoreTokens() ) {
-                            name = name + StringT.nextToken();
-                            if ( StringT.hasMoreTokens() ) { name = name + " "; }
-                        }
-
-                        int t=getType(type);
-                        int color=ColorUtil.getColor( c );
-
-                        if ( color != 0 && t != -1 && !name.equals("") && (   (  unlimitedLocalMode && game.addPlayer(t, name, color, "LOCALGAME" ) ) || ( !unlimitedLocalMode && game.addPlayer(t, name, color, Addr)    )    ) ) {
-                            //New player created, name: {0} color: {1}
-                            output=RiskUtil.replaceAll(RiskUtil.replaceAll( resb.getString("core.newplayer.created")
-                                    , "{0}", name)
-                                    , "{1}", c);
-
-                            controller.addPlayer(t, name, color, Addr);
-                            //System.out.print("New player has Address: "+Addr+"\n");
-
-                        }
-                        else { output=resb.getString( "core.newplayer.error.unable"); }
-
-
-
-                    }
-                    else  { output=RiskUtil.replaceAll( resb.getString( "core.error.syntax"), "{0}", "newplayer type (skill) color name"); }
-
-                }
-                else if (input.equals("delplayer")) {
-
-                    if (StringT.countTokens() >= 1) {
-                        String name=RiskUtil.getAtLeastOne(StringT);
-
-                        if ( game.delPlayer(name) ) {
-                            controller.delPlayer(name);
-                            output=RiskUtil.replaceAll(resb.getString( "core.delplayer.deleted"), "{0}", name);
-                        }
-                        else { output=resb.getString( "core.delplayer.error.unable"); }
-                    }
-                    else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "delplayer name"); }
-
-                }
-                else if (input.equals("info")) {
-
-                    if (StringT.hasMoreTokens()==false) {
-
-                        output=resb.getString( "core.info.title") + "\n";
-
-                        List players = game.getPlayers();
-
-                        for (int a=0; a< players.size() ; a++) {
-
-                            output = output + resb.getString( "core.info.player") + " " + ((Player)players.get(a)).getName() +"\n";
-
-                        }
-
-                        output = output + resb.getString( "core.info.mapfile") + " "+ game.getMapFile() +"\n";
-                        output = output + resb.getString( "core.info.cardsfile") + " "+ game.getCardsFile() ;
-
-                    }
-                    else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "info"); }
-
-                }
-                else if (input.equals("autosetup")) {
-
-                    if (StringT.hasMoreTokens()==false) {
-
-                        if ( game.getPlayers().size() == 0) {
-
-                            if (!replay) {
-
-                                for (int c=1;c<=RiskGame.MAX_PLAYERS;c++) {
-
-                                    parser("newplayer " + riskconfig.getProperty("default.player"+c+".type")+" "+ riskconfig.getProperty("default.player"+c+".color")+" "+ riskconfig.getProperty("default.player"+c+".name") );
-
-                                }
-
-                                output = resb.getString( "core.info.autosetup");
-
-                            }
-                            else {
-
-                                output = "replay mode, nothing done";
-
-                            }
-
-                        }
-                        else {
-
-                            output = resb.getString( "core.info.autosetup.error");
-
-                        }
-
-                    }
-                    else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autosetup"); }
-
-                }
-                else if (input.equals("startgame")) {
-                    if (StringT.countTokens() >= 2 && StringT.countTokens() <= 4) {
-
-                        int n=game.getPlayers().size();
-
-                        int newgame_type = -1;
-                        int newgame_cardType = -1;
-                        boolean newgame_autoplaceall = false;
-                        boolean newgame_recycle = false;
-                        boolean threeDice = false;
-
-                        String crap = null;
-
-                        while (StringT.hasMoreTokens()) {
-                            String newOption = StringT.nextToken();
-                            if ( newOption.equals("domination") ) {
-                                newgame_type = RiskGame.MODE_DOMINATION;
-                            }
-                            else if ( newOption.equals("capital") ) {
-                                newgame_type = RiskGame.MODE_CAPITAL;
-                            }
-                            else if ( newOption.equals("mission") ) {
-                                newgame_type = RiskGame.MODE_SECRET_MISSION;
-                            }
-                            else if ( newOption.equals("increasing") ) {
-                                newgame_cardType = RiskGame.CARD_INCREASING_SET;
-                            }
-                            else if ( newOption.equals("fixed") ) {
-                                newgame_cardType = RiskGame.CARD_FIXED_SET;
-                            }
-                            else if ( newOption.equals("italianlike") ) {
-                                newgame_cardType = RiskGame.CARD_ITALIANLIKE_SET;
-                                threeDice = true;
-                            }
-                            else if ( newOption.equals("autoplaceall") ) {
-                                newgame_autoplaceall = true;
-                            }
-                            else if ( newOption.equals("recycle") ) {
-                                newgame_recycle = true;
-                            }
-                            else {
-                                crap = newOption;
-                            }
-                        }
-
-                        if (crap==null) {
-                            // checks all the options are correct to start a game
-                            if ( newgame_type!=-1 && newgame_cardType!=-1 && n>=2 && n<=RiskGame.MAX_PLAYERS) {
-
-                                autoplaceall = newgame_autoplaceall;
-                                
-                                game.startGame(newgame_type,newgame_cardType,newgame_recycle,threeDice);
-                                /*
-                                try {
-
-                                    game.startGame(newgame_type,newgame_cardType,newgame_recycle,threeDice);
-
-                                }
-                                catch (Exception e) {
-
-                                    RiskUtil.printStackTrace(e);
-
-                                }
-                                */
-
-                            }
-
-                            // this checks if the game was able to start or not
-                            if (game.getState() != RiskGame.STATE_NEW_GAME ) {
-
-                                controller.noInput();
-
-                                controller.startGame( unlimitedLocalMode );
-
-                                if ( shouldGameCommand(Addr) ) {
-
-                                    gameCommand(Addr, "PLAYER", String.valueOf( game.getRandomPlayer() ) );
-
-                                    // do that mission thing
-                                    if (game.getGameMode()== RiskGame.MODE_SECRET_MISSION ) {
-
-                                        // give me a array of random numbers
-                                        Random r = new Random();
-                                        int a = game.getNoMissions();
-                                        int b = game.getNoPlayers();
-
-                                        StringBuffer outputa=new StringBuffer();
-                                        for (int c=0; c< b ; c++) {
-                                            if (outputa.length()!=0 ) {
-                                                outputa.append(' ');
-                                            }
-                                            outputa.append( r.nextInt(a) );
-                                            a--;
-                                        }
-
-                                        gameCommand(Addr, "MISSION", outputa.toString());
-                                    }
-
-                                    // do that autoplace thing
-                                    if ( game.getGameMode()==RiskGame.MODE_SECRET_MISSION || autoplaceall ) {
-
-                                        List a = game.shuffleCountries();
-
-                                        StringBuffer outputb=new StringBuffer();
-                                        for (int c=0; c< a.size() ; c++) {
-                                            if (outputb.length()!=0 ) {
-                                                outputb.append(' ');
-                                            }
-                                            outputb.append( ((Country)a.get(c)).getColor() );
-                                        }
-
-                                        gameCommand(Addr, "PLACEALL", outputb.toString());
-                                    }
-
-                                }
-
-                                output=null;
-                                needInput=false;
-
-                            }
-                            else {
-                                output=resb.getString( "core.start.error.players");
-                            }
-                        }
-                        else {
-                            output="unknown option: "+crap;
-                        }
-                    }
-                    else {
-                        output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "startgame gametype cardtype (autoplaceall recycle)");
-                    }
-                }
-
-                // REPLAY A GAME
-                else if (input.equals("play")) {
-
-                    if (StringT.countTokens() >= 1) {
-                        String filename = RiskUtil.getAtLeastOne(StringT);
-
-                        try {
-
-                            URL url;
-
-                            // TODO dont think this can ever work as an applet anyway
-                            //if (Risk.applet==null) {
-
-                            url = (new File(filename)).toURI().toURL();
-
-                            //}
-                            //else {
-                            //	url = new URL( net.yura.domination.engine.Risk.applet.getCodeBase() , filename );
-                            //}
-
-                            BufferedReader bufferin=new BufferedReader(new InputStreamReader(url.openStream()));
-
-
-                            //create thread with bufferin
-                            class Replay extends Thread {
-
-                                private Risk risk;
-                                private BufferedReader bufferin;
-
-                                public Replay(Risk r, BufferedReader in) {
-
-                                    risk=r;
-                                    bufferin=in;
-
-                                }
-                                
-                                public void run() {
-                                	// try and catch
-                                        String input = bufferin.readLine();
-                                        while(input != null) {
-                                            //System.out.print(input+"\n");
-                                            risk.inGameParser(input);
-                                            input = bufferin.readLine();
-                                        }
-                                        bufferin.close();
-                                    //set replay off
-                                    replay = false;
-                                    getInput();
-                                }
-                                
-                                /* try and catch
-                                public void run1() {
-                                	// try and catch
-                                    try {
-                                        String input = bufferin.readLine();
-                                        while(input != null) {
-                                            //System.out.print(input+"\n");
-                                            risk.inGameParser(input);
-                                            input = bufferin.readLine();
-                                        }
-                                        bufferin.close();
-                                    }
-                                    catch(Exception error) {
-                                        RiskUtil.printStackTrace(error);
-                                    }
-                                    //set replay off
-                                    replay = false;
-                                    getInput();
-                                }
-                                */
-                            }
-
-                            Thread replaythread = new Replay(this, bufferin);
-
-                            //set boolean that replay is on
-                            replay = true;
-
-                            replaythread.start();
-
-                            output="playing \""+filename+"\"";
-
-
-                        }
-                        catch(Exception error) {
-                            output="unable to play \""+filename+"\" "+error;
-                        }
-                    }
-                    else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "play filename"); }
-                }
-                else { output=RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "newplayer, delplayer, startgame, choosemap, choosecards, info, autosetup"); }
-
-            }
-            else {
-                boolean aiPlayer = game.getCurrentPlayer().getType()!=Player.PLAYER_HUMAN;
-                try {
-                    // UNDO
-                    if (input.equals("undo")) {
-
-                        if(game.getState()!=RiskGame.STATE_GAME_OVER && aiPlayer) {
-                            throw new IllegalArgumentException("ai is trying to call undo");
-                        }
-
-                        if ( StringT.hasMoreTokens()==false ) {
-
-                            if ( unlimitedLocalMode ) {
-
-                                try {
-                                    // can not undo when defending yourself as it is not really your go
-                                    if (game.getState()!=RiskGame.STATE_DEFEND_YOURSELF && Undo!=null && Undo.size()!=0) {
-                                        //game = (RiskGame)Undo.getObject( nullCipher );
-                                        ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(Undo.toByteArray()));
-                                        game = (RiskGame)in.readObject();
-
-                                        output =resb.getString( "core.undo.undone");
-                                    }
-                                    else {
-                                        output =resb.getString( "core.undo.error.unable");
-                                    }
-                                }
-                                catch (Exception e) {
-                                    logger.log(Level.WARNING, resb.getString( "core.loadgame.error.undo"),e);
-                                }
-                            }
-                            else {
-                                output = resb.getString( "core.undo.error.network");
-                            }
-
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "undo"); }
-
-
-                    }
-                    else if (input.equals("showmission")) {
-                        if (StringT.hasMoreTokens()==false) {
-
-                            // only show to the right player!
-
-                            if ( showHumanPlayerThereInfo() ) {
-                                output = resb.getString( "core.showmission.mission") + " " + getCurrentMission();
-                            }
-                            else { output=resb.getString( "core.showmission.error"); }
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "showmission"); }
-                    }
-                    else if (input.equals("showarmies")) {
-                        if (StringT.hasMoreTokens()==false) {
-
-                            if ( game.getState() != RiskGame.STATE_NEW_GAME) {
-
-                                Country[] v = game.getCountries();
-
-                                output=resb.getString( "core.showarmies.countries") + System.getProperty("line.separator");
-
-                                for (int c=0; c< v.length ; c++) {
-
-                                    output = output + v[c].getColor() + " " + v[c].getName()+" - "; // Display
-
-                                    if ( v[c].getOwner() != null ) {
-                                        output = output + ((Player)v[c].getOwner()).getName() +" ("+v[c].getArmies() +")";
-                                        if (game.getGameMode() == 2 && game.getSetupDone() && game.getState() !=RiskGame.STATE_SELECT_CAPITAL) {
-
-                                            List players = game.getPlayers();
-
-                                            for (int a=0; a< players.size() ; a++) {
-
-                                                if ( ((Player)players.get(a)).getCapital() != null && ((Player)players.get(a)).getCapital() == v[c] ) {
-                                                    output = output + " " + RiskUtil.replaceAll( resb.getString( "core.showarmies.captial")
-                                                            , "{0}", ((Player)players.get(a)).getName());
-                                                }
-
-                                            }
-
-                                        }
-
-                                        output = output + System.getProperty("line.separator");
-
-                                    }
-                                    else {
-                                        output = output + resb.getString( "core.showarmies.noowner") + System.getProperty("line.separator");
-                                    }
-
-                                }
-
-                            }
-                            else { output=resb.getString( "core.showarmies.error.unable"); }
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "showarmies"); }
-                    }
-
-                    else if (input.equals("showcards")) {
-                        if (StringT.hasMoreTokens()==false) {
-
-                            if ( showHumanPlayerThereInfo() ) {
-
-                                List c = ((Player)game.getCurrentPlayer()).getCards();
-
-                                if (c.size() == 0) {
-                                    output=resb.getString( "core.showcards.nocards");
-                                }
-                                else {
-                                    output=resb.getString( "core.showcards.youhave");
-
-                                    for (int a=0; a< c.size() ; a++) {
-
-                                        if ( ((Card)c.get(a)).getName().equals(Card.WILDCARD) ) {
-                                            output = output + " " + Card.WILDCARD; // resb.getString( "core.showcards.wildcard"); // dont use this as user needs to type it in
-                                        }
-                                        else {
-                                            output = output + " \"" + ((Card)c.get(a)).getName() +" "+ ((Country)((Card)c.get(a)).getCountry()).getName() +" ("+((Country)((Card)c.get(a)).getCountry()).getColor()+")\""; // Display
-                                        }
-
-                                    }
-                                }
-
-                                if(game.getCardMode()==RiskGame.CARD_FIXED_SET) {
-                                    output = output+"\n"+ resb.getString("cards.fixed");
-
-                                }
-                                else if(game.getCardMode()==RiskGame.CARD_ITALIANLIKE_SET) {
-                                    output = output+"\n"+ resb.getString("cards.italianlike");
-
-                                }
-                                else {
-                                    output = output+"\n"+ RiskUtil.replaceAll(resb.getString("cards.nexttrade"), "{0}", String.valueOf(getNewCardState()) );
-                                }
-
-                            }
-                            else { output=resb.getString( "core.showcards.error.unable"); }
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "showcards"); }
-                    }
-
-                    else if (input.equals("autoendgo")) {
-                        if (StringT.hasMoreTokens()==false) {
-                            String strSelected;
-
-                            if ( game.getCurrentPlayer().getAutoEndGo() ) {
-                                strSelected = "core.autoendgo.on";
-                            }
-                            else {
-                                strSelected = "core.autoendgo.off";
-                            }
-                            output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( strSelected));
-                        }
-                        else if (StringT.countTokens() == 1) {
-
-                            String option = StringT.nextToken();
-                            if (option.equals("on") ) {
-                                game.getCurrentPlayer().setAutoEndGo(true);
-                                output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( "core.autoendgo.on"));
-                            }
-                            else if (option.equals("off") ) {
-                                game.getCurrentPlayer().setAutoEndGo(false);
-                                output = RiskUtil.replaceAll(resb.getString( "core.autoendgo.setto"), "{0}", resb.getString( "core.autoendgo.off"));
-                            }
-                            else { output=RiskUtil.replaceAll(resb.getString( "core.autoendgo.error.unknown"), "{0}", option); }
-
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autoendgo on/off"); }
-                    }
-
-                    else if (input.equals("autodefend")) {
-                        if (StringT.hasMoreTokens()==false) {
-
-                            String strSelected;
-                            if ( game.getCurrentPlayer().getAutoDefend() ) {
-                                strSelected = "core.autodefend.on";
-                            }
-                            else {
-                                strSelected = "core.autodefend.on";
-                            }
-                            output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( strSelected));
-                        }
-                        else if (StringT.countTokens() == 1) {
-
-                            String option = StringT.nextToken();
-                            if (option.equals("on") ) {
-                                game.getCurrentPlayer().setAutoDefend(true);
-                                output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( "core.autodefend.on"));
-                            }
-                            else if (option.equals("off") ) {
-                                game.getCurrentPlayer().setAutoDefend(false);
-                                output = RiskUtil.replaceAll(resb.getString( "core.autodefend.setto"), "{0}", resb.getString( "core.autodefend.off"));
-                            }
-                            else { output=RiskUtil.replaceAll(resb.getString( "core.autodefend.error.unknown"), "{0}", option); }
-
-                        }
-                        else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autodefend on/off"); }
-                    }
-                    else if (game.getState()==RiskGame.STATE_TRADE_CARDS) {
-
-                        if (input.equals("trade")) {
-                            if (StringT.countTokens()==3) {
-                                // trade Japan wildcard Egypt
-                                int noa=0;
-
-                                Card cards[] = game.getCards(StringT.nextToken(),StringT.nextToken(),StringT.nextToken());
-
-                                if (cards[0] != null && cards[1] != null && cards[2] != null) { // if the player DOES HAVE all the cards he chose
-                                    noa = game.trade(cards[0], cards[1], cards[2]);
-                                }
-
-                                if ( noa != 0 ) { // if the trade WAS SUCCESSFUL
-                                    output=RiskUtil.replaceAll(resb.getString( "core.trade.traded"), "{0}", "" + noa);
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.trade.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "trade card card card")); }
-                        }
-                        else if (input.equals("endtrade")) {
-                            if (StringT.hasMoreTokens()==false) {
-
-                                if ( game.endTrade() ) {
-                                    output=resb.getString( "core.trade.endtrade");
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.trade.end.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "endtrade")); }
-                        }
-                        else {
-                            throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "showcards, trade"+(game.canEndTrade()?", endtrade":"") ));
-                        }
-                    }
-                    else if (game.getState()==RiskGame.STATE_PLACE_ARMIES) {
-
-                        if (input.equals("placearmies")) {
-                            if (StringT.countTokens()==2) {
-                                String country=StringT.nextToken();
-                                int c=RiskGame.getNumber( country );
-                                int num=RiskGame.getNumber( StringT.nextToken() );
-                                Country t;
-
-                                if (c != -1) {
-                                    t=game.getCountryInt(c);
-                                }
-                                else {
-                                    //YURA:LANG t=game.getCountryByName(country);
-                                    t=null;
-                                }
-
-                                if ( t != null && num!=-1 && !( game.getGameMode() == 1 && t.getOwner() == null) && !( game.getGameMode() == 3 && t.getOwner() == null) ) {
-
-                                    int result = game.placeArmy(t, num);
-
-                                    if (result!=0) {
-                                        //{0} new army placed in: {1}
-                                        output = RiskUtil.replaceAll( RiskUtil.replaceAll(resb.getString( "core.place.placed")
-                                                , "{0}", String.valueOf(num) )
-                                                , "{1}", t.getName() ); // Display
-
-                                        if (result == 2) {
-                                            output=output + whoWon();
-                                        }
-
-                                    }
-                                    else { throw new IllegalArgumentException(resb.getString( "core.place.error.unable")); }
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.place.error.invalid")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "placearmies country number")); }
-                        }
-                        else if (input.equals("autoplace")) {
-                            if (!StringT.hasMoreTokens()) {
-                                if (shouldGameCommand(Addr)) {
-                                    gameCommand(Addr, "PLACE", String.valueOf( game.getRandomCountry() ) );
-                                }
-                                needInput=false;
-                                output = null;
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autoplace")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "showarmies, placearmies, autoplace")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_ATTACKING) {
-
-                        if (input.equals("attack")) {
-                            if (StringT.countTokens()==2) {
-
-                                String arg1=StringT.nextToken();
-                                String arg2=StringT.nextToken();
-                                int a1=RiskGame.getNumber(arg1);
-                                int a2=RiskGame.getNumber(arg2);
-
-                                Country country1;
-                                Country country2;
-
-                                if (a1 != -1) {
-                                    country1=game.getCountryInt(a1);
-                                }
-                                else {
-                                    //YURA:LANG country1=game.getCountryByName(arg1);
-                                    country1=null;
-                                }
-
-                                if (a2 != -1) {
-                                    country2=game.getCountryInt(a2);
-                                }
-                                else {
-                                    //YURA:LANG country2=game.getCountryByName(arg2);
-                                    country2=null;
-                                }
-
-                                boolean a=game.attack(country1, country2);
-
-                                if ( a ) {
-                                    //Attack {0} ({1}) with {2} ({3}). (You can use up to {4} dice to attack)
-                                    output = RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.attack.attacking")
-                                            , "{0}", country2.getName()) // Display
-                                            , "{1}", "" + country2.getArmies())
-                                            , "{2}", country1.getName()) // Display
-                                            , "{3}", "" + country1.getArmies())
-                                            , "{4}", "" + game.getNoAttackDice() );
-
-                                    //							Player attackingPlayer = ((Country)game.getAttacker()).getOwner();
-                                    //
-                                    //							if ( showHumanPlayerThereInfo( attackingPlayer ) ) {
-                                    //
-                                    //								controller.showDice(a[1], true);
-                                    //							}
-
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.attack.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "attack country country")); }
-                        }
-                        else if (input.equals("endattack")) {
-                            if (StringT.hasMoreTokens()==false) {
-                                if ( game.endAttack() ) {
-                                    output=resb.getString( "core.attack.end.ended");
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.attack.end.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "endattack")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "attack, endattack")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_ROLLING) {
-
-                        if (input.equals("roll")) {
-
-                            if (StringT.countTokens()==1) {
-
-                                int dice=RiskGame.getNumber( StringT.nextToken() );
-
-                                if ( dice != -1 && game.rollA(dice) ) {
-
-                                    if ( battle ) {
-
-                                        controller.setNODAttacker(dice);
-
-                                    }
-
-                                    int n = game.getNoDefendDice();
-
-                                    //Rolled attacking dice, {0} defend yourself! (you can use up to {1} dice to defend)
-                                    output = RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.roll.rolled")
-                                            , "{0}", ((Player)game.getCurrentPlayer()).getName())
-                                            , "{1}", "" + n);
-
-                                    //							Player defendingPlayer = ((Country)game.getDefender()).getOwner();
-                                    //
-                                    //							if ( showHumanPlayerThereInfo(defendingPlayer) ) {
-                                    //								controller.showDice(n, false);
-                                    //							}
-
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.roll.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "roll number")); }
-                        }
-                        else if (input.equals("retreat")) {
-                            if (StringT.hasMoreTokens()==false) {
-
-                                if ( game.retreat() ) {
-                                    output=resb.getString( "core.retreat.retreated");
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.retreat.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "retreat")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "roll, retreat")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_BATTLE_WON) {
-
-                        if (input.equals("move")) {
-                            if (StringT.countTokens()==1) {
-
-                                String num = StringT.nextToken();
-                                int noa;
-
-                                if (num.equals("all")) {
-                                    noa=game.moveAll();
-                                }
-                                else {
-                                    noa=RiskGame.getNumber( num );
-                                }
-
-                                int mov=game.moveArmies(noa);
-
-                                if ( mov != 0 ) {
-                                    //Moved {0} armies to captured country.
-                                    output = RiskUtil.replaceAll(resb.getString( "core.move.moved"), "{0}", "" + noa);
-
-                                    if (mov == 2) {
-                                        output=output + whoWon();
-                                    }
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.move.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "move number")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "move")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_FORTIFYING) {
-
-                        if (input.equals("movearmies")) {
-                            if (StringT.countTokens()==3) {
-
-                                String arg1=StringT.nextToken();
-                                String arg2=StringT.nextToken();
-                                int a1=RiskGame.getNumber(arg1);
-                                int a2=RiskGame.getNumber(arg2);
-
-                                Country country1;
-                                Country country2;
-
-                                if (a1 != -1) {
-                                    country1=game.getCountryInt(a1);
-                                }
-                                else {
-                                    //YURA:LANG country1=game.getCountryByName(arg1);
-                                    country1=null;
-                                }
-
-                                if (a2 != -1) {
-                                    country2=game.getCountryInt(a2);
-                                }
-                                else {
-                                    //YURA:LANG country2=game.getCountryByName(arg2);
-                                    country2=null;
-                                }
-
-                                int noa=RiskGame.getNumber( StringT.nextToken() );
-
-                                if ( game.moveArmy(country1, country2, noa) ) {
-                                    //Moved {0} armies from {1} to {2}.
-                                    output = RiskUtil.replaceAll(RiskUtil.replaceAll(RiskUtil.replaceAll(resb.getString( "core.tacmove.movedfromto")
-                                            , "{0}", "" + noa)
-                                            , "{1}", country1.getName()) // Display
-                                            , "{2}", country2.getName()); // Display
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.tacmove.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "movearmies country country number")); }
-                        }
-                        else if (input.equals("nomove")) {
-                            if (StringT.hasMoreTokens()==false) {
-                                if ( game.noMove() ) {
-                                    output=resb.getString( "core.tacmove.no.nomoves");
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.tacmove.no.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "nomove")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "movearmies, nomove")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_END_TURN) {
-
-                        if (input.equals("endgo")) {
-                            if (StringT.hasMoreTokens()==false) {
-
-                                needInput=false;
-                                output=null;
-
-                                controller.sendMessage(resb.getString( "core.endgo.ended"), false , false);
-                                DoEndGo();
-
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "endgo")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "emdgo")); }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_GAME_OVER) {
-
-                        if (input.equals("continue")) {
-                            if (StringT.hasMoreTokens()==false) {
-
-                                if ( game.continuePlay() ) {
-                                    output=resb.getString( "core.continue.successful");
-                                }
-                                else {
-                                    throw new IllegalArgumentException(resb.getString( "core.continue.error.unable"));
-                                }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "continue")); }
-                        }
-                        else {
-                            //The game is over. {0} won! (current possible commands are: continue)
-                            throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.gameover.won"), "{0}", game.getCurrentPlayer().getName()));
-                        }
-
-                    }
-                    else if (game.getState()==RiskGame.STATE_SELECT_CAPITAL) {
-
-                        if (input.equals("capital")) {
-                            if (StringT.countTokens()==1) {
-
-                                String strCountry = StringT.nextToken();
-                                int nCountryId = RiskGame.getNumber(strCountry);
-                                Country t;
-
-                                if (nCountryId != -1) {
-                                    t = game.getCountryInt( nCountryId);
-                                } else {
-                                    //YURA:LANG t = game.getCountryByName( strCountry);
-                                    t=null;
-                                }
-
-                                if ( t != null && game.setCapital(t) ) {
-                                    if ( showHumanPlayerThereInfo() ) {
-                                        output=RiskUtil.replaceAll(resb.getString( "core.capital.selected"), "{0}", t.getName()); // Display
-                                    }
-                                    else {
-                                        output=resb.getString( "core.capital.hasbeenselected");
-                                    }
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.capital.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "capital country")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "capital")); }
-                    }
-                    else if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
-
-                        if (input.equals("roll")) {
-
-                            if (StringT.countTokens()==1) {
-
-                                int dice=RiskGame.getNumber( StringT.nextToken() );
-                                if ( dice != -1 && game.rollD(dice) ) {
-
-                                    if ( battle ) {
-
-                                        controller.setNODDefender(dice);
-
-                                        try{ Thread.sleep(ROLL_DICE_SLEEP); }
-                                        catch(InterruptedException e){}
-
-                                    }
-                                    // client does a roll, and this is not called
-                                    if ( shouldGameCommand(Addr) ) { // recursive call
-
-                                        int[] attackerResults = game.rollDice( game.getAttackerDice() );
-                                        int[] defenderResults = game.rollDice( game.getDefenderDice() );
-
-                                        String serverRoll = "";
-
-                                        serverRoll = serverRoll + attackerResults.length + " ";
-                                        serverRoll = serverRoll + defenderResults.length + " ";
-
-                                        for (int c=0; c< attackerResults.length ; c++) {
-                                            serverRoll = serverRoll + attackerResults[c] + " ";
-                                        }
-                                        for (int c=0; c< defenderResults.length ; c++) {
-                                            serverRoll = serverRoll + defenderResults[c] + " ";
-                                        }
-
-                                        gameCommand(Addr, "DICE", serverRoll );
-
-                                    }
-
-                                    output=null;
-                                    needInput=false;
-
-                                }
-                                else { throw new IllegalArgumentException(resb.getString( "core.roll.error.unable")); }
-                            }
-                            else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "roll number")); }
-                        }
-                        else { throw new IllegalArgumentException(RiskUtil.replaceAll(resb.getString( "core.error.incorrect"), "{0}", "roll")); }
-
-                    }
-                    else { throw new IllegalStateException(resb.getString( "core.error.unknownstate")); }
-                }
-                catch (IllegalArgumentException ex) {
-                    if (aiPlayer) {
-                        logger.log(Level.WARNING,"bad command from ai: \""+message+"\" player="+game.getCurrentPlayer()+" state="+game.getState(),ex);
-                    }
-                    output=ex.getMessage();
-                }
-            } // this was the end of "if there is somthing to pass" but not needed any more
-
+            inGameParser87(input,StringT,Addr);
             updateBattleState();
 
-        }// end of parse of normal command
-
-        // give a output if there is one
+        }
+    }
+    private void inGameParser89(String output) {
+        boolean b = game.getCurrentPlayer().getAutoEndGo();
+        while (b) {
+            controller.sendMessage(output, false, false );
+            break;
+        }
+        boolean b2 = !(game.getCurrentPlayer().getAutoEndGo() );
+        while (b2) {
+            controller.sendMessage(output, true, true );
+            break;
+        }
+    }
+    private void inGameParser90(String output) {
         if (output!=null) {
             // give a output
             if (game==null) {
@@ -2114,30 +1668,33 @@ public class Risk extends Thread {
                 controller.sendMessage(output, true, true );
             }
             else if (game.getState()==RiskGame.STATE_END_TURN) {
-                while ( game.getCurrentPlayer().getAutoEndGo() ) {
-                    controller.sendMessage(output, false, false );
-                    break;
-                }
-                while (!(game.getCurrentPlayer().getAutoEndGo() )) {
-                    controller.sendMessage(output, true, true );
-                    break;
-                }
+                inGameParser89(output);
             }
             else {// if player type is human or neutral or ai
                 controller.sendMessage(output, true, true );
             }
         }
-
-        // check to see if the players go should be ended
-        if ( game != null && game.getState()==RiskGame.STATE_END_TURN && game.getCurrentPlayer().getAutoEndGo() ) {
-            needInput=false;
-            DoEndGo();
-        }
-
-        // ask for input if u need one
-        if (needInput) {
-            getInput();
-        }
+    }
+    /**
+     * This parses the string, calls the relavant method and displays the correct error messages
+     */
+    protected void inGameParser(final String message) {
+        controller.sendDebug(message);
+        boolean needInput=true;
+        String output=null;
+        StringTokenizer StringT = new StringTokenizer( message );
+        final String Addr = StringT.nextToken();
+        inGameParser10(Addr,message,StringT);
+        inGameParser9(StringT,Addr);
+        inGameParser16(Addr,StringT);
+        inGameParser17(Addr,StringT);
+        inGameParser19(Addr,StringT);
+        inGameParser20(Addr,StringT);
+        inGameParser21(Addr,StringT);
+        inGameParser54(Addr,StringT);
+        inGameParser88(Addr,message,StringT);
+        // give a output if there is one
+        inGameParser90(output);
     }
 
     // TODO is this thread safe???
@@ -2248,86 +1805,63 @@ public class Risk extends Thread {
     /**
      * This deals with trying to find out what input is required for the parser
      */
-    public void getInput() {
-
-        // if we have more commands we need to process, do not bother asking for input
-        if (!inbox.isEmpty()) return;
-
-        setHelp();
-
+    private void getInput2() {
+        if (game.getState()==RiskGame.STATE_TRADE_CARDS) {
+            controller.sendMessage( RiskUtil.replaceAll(resb.getString( "core.input.newarmies"), "{0}", ((Player)game.getCurrentPlayer()).getExtraArmies() + "") , false, false);
+            //controller.armiesLeft( ((Player)game.getCurrentPlayer()).getExtraArmies() , game.NoEmptyCountries() );
+        }
+    }
+    private void getInput3() {
+        int gs = game.getState();
+        boolean c = game.getCurrentPlayer().getAutoDefend();
+        int p = ((Player)game.getCurrentPlayer()).getType();
+        while(gs == RiskGame.STATE_DEFEND_YOURSELF && c) {
+            parser( getBasicPassiveGo() );
+            break;
+        }
+        while (p ==Player.PLAYER_HUMAN ) {
+            controller.needInput( game.getState() );
+            break;
+        }
+    }
+    private void getInput4() {
+        boolean eq = ((Player)game.getCurrentPlayer()).getAddress().equals(myAddress);
+        if (!replay) {
+            while ( unlimitedLocalMode || eq) {
+                getInput3();
+                ai.play(this);
+                break;
+            }
+        }
+    }
+    private void getInput5() {
+        if (game.getState()==RiskGame.STATE_PLACE_ARMIES) {
+            controller.sendMessage( RiskUtil.replaceAll(resb.getString( "core.input.armiesleft"), "{0}", ((Player)game.getCurrentPlayer()).getExtraArmies() + ""), false, false);
+        }
+    }
+    private void getInput6() {
         if (game==null) {
             controller.needInput( -1 );
         }
+    }
+    public void getInput() {
+        setHelp();
+        getInput6();
+        getInput2();
         // work out what to do next
-        else if ( game!=null && game.getCurrentPlayer()!=null && game.getState()!=RiskGame.STATE_GAME_OVER ) {// if player type is human or neutral or ai
-
-
-
+        if ( game!=null && game.getCurrentPlayer()!=null && game.getState()!=RiskGame.STATE_GAME_OVER ) {// if player type is human or neutral or ai
             updateBattleState();
-
-
-
-            if (game.getState()==RiskGame.STATE_TRADE_CARDS) {
-                controller.sendMessage( RiskUtil.replaceAll(resb.getString( "core.input.newarmies"), "{0}", ((Player)game.getCurrentPlayer()).getExtraArmies() + "") , false, false);
-                //controller.armiesLeft( ((Player)game.getCurrentPlayer()).getExtraArmies() , game.NoEmptyCountries() );
-            }
-            else if (game.getState()==RiskGame.STATE_PLACE_ARMIES) {
-                controller.sendMessage( RiskUtil.replaceAll(resb.getString( "core.input.armiesleft"), "{0}", ((Player)game.getCurrentPlayer()).getExtraArmies() + ""), false, false);
-                //controller.armiesLeft( ((Player)game.getCurrentPlayer()).getExtraArmies() , game.NoEmptyCountries() );
-            }
-
-            if (!replay) {
-
-                // yura:lobby taken out: || ((Player)game.getCurrentPlayer()).getAddress().equals("all")
-
-                // IF local game, OR addres match get input
-                while ( unlimitedLocalMode || ((Player)game.getCurrentPlayer()).getAddress().equals(myAddress) ) {
-
-                    while( game.getState() == RiskGame.STATE_DEFEND_YOURSELF && game.getCurrentPlayer().getAutoDefend() ) {
-
-                        parser( getBasicPassiveGo() );
-                        break;
-                    }
-
-                    // || ((Player)game.getCurrentPlayer()).getType()==Player.PLAYER_NEUTRAL
-
-                    while ( ((Player)game.getCurrentPlayer()).getType()==Player.PLAYER_HUMAN ) {
-
-                        controller.needInput( game.getState() );
-                        break;
-                    }
-                        ai.play(this);
-                        break;
-                }
-                //else if ( game.getCurrentPlayer().getType()==Player.PLAYER_HUMAN ) {
-
-                // this is here for the lobby
-                //getHumanInput();
-
-                //}
-
-            }
-
-
+            getInput5();
+            getInput4();
         }
         else {
             controller.needInput( game.getState() );
         }
-
     }
-
     final AIManager ai = new AIManager();
 
     public String getBasicPassiveGo() {
         return ai.getOutput(game,Player.PLAYER_AI_CRAP);
-    }
-
-    public String[] getAICommands() {
-        return ai.getAICommands();
-    }
-
-    public String getCommandFromType(int type) {
-        return ai.getCommandFromType(type);
     }
 
     public String whoWon() {
@@ -2348,23 +1882,21 @@ public class Risk extends Thread {
         }
         return null;
     }
-
-    /** Shows helpful tips in each game state */
-    public void setHelp() {
-
-        String help="";
-
+    private void setHelp2(int type, String strId) {
+        if (type==Player.PLAYER_HUMAN) {
+            strId = "core.help.move.human";
+        }
+        else {
+            strId = "core.help.move.ai."+ai.getCommandFromType(type);
+        }
+    }
+    private void setHetlp3(String help) {
         if ( game!=null && game.getCurrentPlayer() != null ) {
 
             String strId = null;
 
             int type = game.getCurrentPlayer().getType();
-            if (type==Player.PLAYER_HUMAN) {
-                strId = "core.help.move.human";
-            }
-            else {
-                strId = "core.help.move.ai."+ai.getCommandFromType(type);
-            }
+            setHelp2(type,strId);
             try {
                 help = RiskUtil.replaceAll(resb.getString(strId), "{0}", game.getCurrentPlayer().getName()) +" ";
             }
@@ -2373,63 +1905,87 @@ public class Risk extends Thread {
                 help = strId+": ("+game.getCurrentPlayer().getName()+") ";
             }
         }
-
+    }
+    private void setHelp4(String help) {
         if (game == null) {
             help = resb.getString( "core.help.newgame");
         }
-        else if (game.getState()==RiskGame.STATE_NEW_GAME) {
+        if (game.getState()==RiskGame.STATE_NEW_GAME) {
             help = resb.getString( "core.help.createplayers");
         }
-        else if (game.getState()==RiskGame.STATE_TRADE_CARDS) {
-            help = help + resb.getString( "core.help.trade");
-        }
-        else if (game.getState()==RiskGame.STATE_PLACE_ARMIES) {
-
-            while( game.getSetupDone() ) { help = help + resb.getString( "core.help.placearmies");
+    }
+    private void setHelp5(String help) {
+        boolean b = game.getSetupDone();
+        boolean b2 = game.NoEmptyCountries();
+        while(b) { help = help + resb.getString( "core.help.placearmies");
             break;
+        }
+
+        while(b2) { help = help + resb.getString( "core.help.placearmy");
+            break;
+        }
+    }
+    private void setHelp6(String help) {
+        if (game.getState()==RiskGame.STATE_PLACE_ARMIES) {
+            setHelp5(help);
+            boolean value = (!(game.getSetupDone() ));
+            boolean value2 = (!(game.NoEmptyCountries()));
+            while(value && value2)
+            { help = help + resb.getString( "core.help.placearmyempty");
+                break;
             }
 
-            while( game.NoEmptyCountries() ) { help = help + resb.getString( "core.help.placearmy");
-            break;
-            }
-
-            while((!(game.getSetupDone() )) && ( !(game.NoEmptyCountries() )))
-            	{ help = help + resb.getString( "core.help.placearmyempty");
-           	break;
-           }
-
         }
-        else if (game.getState()==RiskGame.STATE_ATTACKING) {
+    }
+    private void setHelp7(String help) {
+        if (game.getState()==RiskGame.STATE_ATTACKING) {
             help = help + resb.getString( "core.help.attack");
         }
-        else if (game.getState()==RiskGame.STATE_ROLLING) {
+        if (game.getState()==RiskGame.STATE_ROLLING) {
             help = help + resb.getString( "core.help.rollorretreat");
         }
-        else if (game.getState()==RiskGame.STATE_BATTLE_WON) {
+        if (game.getState()==RiskGame.STATE_BATTLE_WON) {
             help = help + resb.getString( "core.help.youhavewon");
         }
-        else if (game.getState()==RiskGame.STATE_FORTIFYING) {
+    }
+    private void setHelp8(String help) {
+        if (game.getState()==RiskGame.STATE_FORTIFYING) {
             help = help + resb.getString( "core.help.fortifyposition");
         }
-        else if (game.getState()==RiskGame.STATE_END_TURN) {
+        if (game.getState()==RiskGame.STATE_END_TURN) {
             help = help + resb.getString( "core.help.endgo");
         }
-        else if (game.getState()==RiskGame.STATE_GAME_OVER) {
+        if (game.getState()==RiskGame.STATE_GAME_OVER) {
             //the game is over, {0} has won! close the game to create a new one
             help = RiskUtil.replaceAll(resb.getString( "core.help.gameover"), "{0}", ((Player)game.getCurrentPlayer()).getName());
         }
-        else if (game.getState()==RiskGame.STATE_SELECT_CAPITAL) {
+    }
+    private void setHelp9(String help) {
+        if (game.getState()==RiskGame.STATE_SELECT_CAPITAL) {
             help = help + resb.getString( "core.help.selectcapital");
         }
-        else if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
+        if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
             help = help + resb.getString( "core.help.defendyourself");
         }
         else {
             help = resb.getString( "core.help.error.unknownstate");
         }
+    }
+    /** Shows helpful tips in each game state */
+    public void setHelp() {
 
+        String help="";
+        setHetlp3(help);
+        setHelp4(help);
+
+        if (game.getState()==RiskGame.STATE_TRADE_CARDS) {
+            help = help + resb.getString( "core.help.trade");
+        }
+        setHelp6(help);
+        setHelp7(help);
+        setHelp8(help);
+        setHelp9(help);
         controller.setGameStatus( help );
-
     }
 
     boolean skipUndo; // sometimes on some JVMs this just does not work
@@ -2459,15 +2015,6 @@ public class Risk extends Thread {
             }
         }
     }
-
-    public byte[] getLastSavedState() {
-        return Undo.toByteArray();
-    }
-
-    public void setSkipUndo(boolean skip) {
-        skipUndo = skip;
-    }
-
     public void disconnected() {
 
         //System.out.print("Got kicked off the server!\n");
@@ -2478,19 +2025,21 @@ public class Risk extends Thread {
         getInput();
 
     }
-
+    private void update2(Player attackingPlayer, Player defendingPlayer) {
+        if ( showHumanPlayerThereInfo(attackingPlayer) || showHumanPlayerThereInfo(defendingPlayer) ) {
+            controller.openBattle( game.getAttacker().getColor() , game.getDefender().getColor() );
+            // we are opeing the battle at a strange point, when NODAttacker is already set, so we should update it on the battle
+            if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
+                controller.setNODAttacker(game.getAttackerDice());
+            }
+            battle=true;
+        }
+    }
     private void updateBattleState() {
         if ((game.getState()==RiskGame.STATE_ROLLING || game.getState()==RiskGame.STATE_DEFEND_YOURSELF) && !battle) {
             Player attackingPlayer = game.getAttacker().getOwner();
             Player defendingPlayer = game.getDefender().getOwner();
-            if ( showHumanPlayerThereInfo(attackingPlayer) || showHumanPlayerThereInfo(defendingPlayer) ) {
-                controller.openBattle( game.getAttacker().getColor() , game.getDefender().getColor() );
-                // we are opeing the battle at a strange point, when NODAttacker is already set, so we should update it on the battle
-                if (game.getState()==RiskGame.STATE_DEFEND_YOURSELF) {
-                    controller.setNODAttacker(game.getAttackerDice());
-                }
-                battle=true;
-            }
+            update2(attackingPlayer,defendingPlayer);
         }
         // if someone retreats
         else if (game.getState()!=RiskGame.STATE_ROLLING && game.getState()!=RiskGame.STATE_DEFEND_YOURSELF) {
@@ -2501,18 +2050,6 @@ public class Risk extends Thread {
     public void closeBattle() {
         if ( battle ) { controller.closeBattle(); battle=false; }
     }
-
-    /**
-     * Shows the cards a Player has in his/her possession
-     * @return Vector Returns the cards in a vector
-     */
-    public List getCurrentCards() {
-        //return game.getCards(); // for testing cards
-        return ((Player)game.getCurrentPlayer()).getCards();
-    }
-
-
-
     /**
      * Checks whether a Player has armies in a country
      * @param name The index of the country
@@ -2523,25 +2060,6 @@ public class Risk extends Thread {
         return ((Country)game.getCountryInt(name)).getArmies();
 
     }
-
-
-
-    /**
-     * Checks whether a Player can attack a country
-     * @param a The name of the country attacking
-     * @param d The name of the country defending
-     * @return boolean Returns true if the player owns the country, else returns false
-     *
-    //  * @deprecated
-
-    public boolean canAttack(String a, String d) {
-
-    if ( ((Country)game.getCountry(a)).isNeighbours( (Country)game.getCountry(d) ) ) { return true; }
-    else { return false; }
-
-    }
-     */
-
     /**
      * checks whether a Player can attach a country
      * @param nCountryFrom	The name of the country attacking
@@ -2555,8 +2073,6 @@ public class Risk extends Thread {
         }
         return false;
     }//public boolean canAttack(int nCountryFrom, int nCountryTo)
-
-
 
     /**
      * Checks whether a Player owns a country
@@ -2600,106 +2116,6 @@ public class Risk extends Thread {
             return resb.getString( "core.mission.error.cantshow");
         }
     }
-
-    /**
-     * Get the colours of the players in the game
-     * @return Color[] Return the colour of the game players
-     */
-    public int[] getPlayerColors() {
-
-        RiskGame g = game;
-
-        // sometimes this method can get called if we close a game half way through a paint
-        if (g==null) return new int[0];
-
-        if ( g.getState() == RiskGame.STATE_DEFEND_YOURSELF ) {
-            Country defender = g.getDefender();
-            if (defender!=null) {
-                return new int[] { defender.getOwner().getColor() };
-            }
-        }
-
-        List Players = g.getPlayers();
-        boolean setup = g.getSetupDone();
-
-        int num=0;
-        int start=0;
-
-        for (int c=0; c< Players.size() ; c++) {
-
-            if ( ((Player)Players.get(c)).getNoTerritoriesOwned() > 0 || !setup ) { num++; }
-            if ( ((Player)Players.get(c)) == g.getCurrentPlayer() ) { start=c; }
-        }
-
-        int[] playerColors = new int[num];
-
-        int current=0;
-
-        for (int c=start; c< Players.size() ; c++) {
-
-            if ( ((Player)Players.get(c)).getNoTerritoriesOwned() > 0 || !setup ) { playerColors[ current ] = ((Player)Players.get(c)).getColor() ; current++; }
-            if ( current==num ) { break; }
-            if ( c==Players.size()-1 ) { c=-1; }
-        }
-
-        return playerColors;
-    }
-
-    /**
-     * Get the colour of the current player
-     * @return Color Return the colour of the current player in the game
-     */
-    public int getCurrentPlayerColor() {
-
-        if (game != null && game.getState() != RiskGame.STATE_NEW_GAME) {
-            return ((Player)game.getCurrentPlayer()).getColor();
-        }
-        else {
-            return 0;
-        }
-    }
-
-    /**
-     * Get the colour of the current player
-     * @param n the Country number identifier
-     * @return Color Return the colour of a player that owns a country
-     */
-    public int getColorOfOwner(int n) {
-
-        return ((Player)((Country)game.getCountryInt(n)).getOwner()).getColor();
-
-    }
-
-    /**
-     * Checks whether a set of cards can be traded in for extra armies
-     * @param c1 the name of the first card
-     * @param c2 the name of the second card
-     * @param c3 the name of the third card
-     * @return boolean Return true if the card can be traded, else return false
-     */
-    public boolean canTrade(String c1, String c2, String c3) {
-
-        if (game.getState() == RiskGame.STATE_TRADE_CARDS ) {
-
-            Card[] cards = game.getCards(c1,c2,c3);
-
-            if (cards[0] == null || cards[1] == null || cards[2] == null) {
-                return false;
-            }
-
-            return game.checkTrade(cards[0], cards[1], cards[2]);
-        }
-        return false;
-    }
-
-    /**
-     * Get the state of the cards
-     * @return int Return the newCardState
-     */
-    public int getNewCardState() {
-        return game.getNewCardState();
-    }
-
     /**
      * Get the present game
      * @return RiskGame Return the current game
@@ -2707,95 +2123,6 @@ public class Risk extends Thread {
     public RiskGame getGame() {
         return game;
     }
-
-    public boolean getLocalGame() {
-        return unlimitedLocalMode;
-    }
-
-    /**
-     * Get the name of the country from the game
-     * @param c The (unique) country identifier
-     * @return String Return Country name if it is there, else return empty speech-marks otherwise
-     */
-    public String getCountryName(int c) {
-
-        Country t = game.getCountryInt(c);
-        if (t==null) {
-            return "";
-        } else {
-            return t.getName();
-        }
-
-    }
-
-    public Player getCountryCapital(int c) {
-        Country t = game.getCountryInt(c);
-        List<Player> players = game.getPlayers();
-        for (Player player: players) {
-            if (player.getCapital() == t) {
-                return player;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * returns the country display name
-     * @param nCountryId	The ID of the country
-     * @return	The country's display name
-
-    public String getCountryDisplayName(int nCountryId)
-    {
-    Country country = game.getCountryInt( nCountryId);
-    if (country == null) {
-    return "";
-    } else {
-    return country.getName(); // Display
-    }
-    }//public String getCountryDisplayName(int nCountryId)
-     */
-
-
-    /**
-     * Checks whether the current Player has autoEndGo on
-     * @return boolean Return autoEndGo
-     */
-    public boolean getAutoEndGo() {
-
-        if (game != null && game.getCurrentPlayer()!=null) {
-
-            return game.getCurrentPlayer().getAutoEndGo();
-        }
-        else {
-            // this should never happen, but can come up with bad timing problems
-            return false;
-        }
-    }
-
-    /**
-     * Checks whether the current Player has autoDefend on
-     * @return boolean Return autoDefend
-     */
-    public boolean getAutoDefend() {
-
-        if (game !=null && game.getCurrentPlayer()!=null) {
-
-            return game.getCurrentPlayer().getAutoDefend();
-        }
-        else {
-            // this should never happen, but can come up with bad timing problems
-            return false;
-        }
-
-    }
-
-    public String getMyAddress() {
-        return myAddress;
-    }
-
-
-
-
 
     public void showMessageDialog(String a) {
 
@@ -2832,50 +2159,6 @@ public class Risk extends Thread {
 
     }
 
-
-    public void newMemoryGame(RiskGame g, String map) {
-
-        closeGame();
-        
-        try {
-            // make a copy
-
-            //javax.crypto.NullCipher nullCipher = new javax.crypto.NullCipher();
-        	
-        	Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); //OK
-        	
-			// @TODO, this will crash on macs
-            game = (RiskGame) 
-            		(new javax.crypto.SealedObject( g, chiper ).getObject( chiper ));
-            game.loadMap(false, new BufferedReader(new StringReader(map)));
-
-            for (int c=1;c<=RiskGame.MAX_PLAYERS;c++) {
-                game.delPlayer("PLAYER"+c);
-            }
-        }
-        catch (Exception e) {
-            // should never happen
-            //RiskUtil.printStackTrace(e);
-            throw new RuntimeException(e);
-        }
-
-        controller.newGame(true);
-
-        controller.showCardsFile( "loaded from memory" , (game.getNoMissions()!=0) );
-
-        // we dont do this here as it wont work
-        //controller.showMapPic(game);
-        // the preview pic is instead set directly by the MapEditor calling on the SetupPanel
-        /** @see net.yura.domination.ui.swinggui.SwingGUIPanel#showMapImage(javax.swing.Icon) */
-
-        unlimitedLocalMode = true;
-    }
-
-    public void setOnlinePlay(OnlineRisk online) {
-        onlinePlayClient = online;
-        unlimitedLocalMode = onlinePlayClient==null;
-    }
-
     public void setGame(RiskGame b) {
         if (game!=null) {
             closeBattle();
@@ -2886,7 +2169,24 @@ public class Risk extends Thread {
         controller.startGame(unlimitedLocalMode);// need to always call this as there may be a new map
         getInput();
     }
-
+    private void renameP2(Player player, String newName,String name,Player leaver) {
+        Player newNamePlayer = null;
+        if (player.getName().equals(newName)) {
+            newNamePlayer = player;
+        }
+        if (player.getName().equals(name)) {
+            leaver=player;
+        }
+    }
+    private void renameP3(Player leaver,String name,String newName) {
+        Player newNamePlayer = null;
+        if (leaver==null) {
+            throw new IllegalArgumentException("can not find player with name \""+name+"\"");
+        }
+        if (newNamePlayer!=null && !name.equals(newName)) {
+            throw new IllegalArgumentException("can not rename \""+name+"\". someone with new name \""+newName+"\" is already in this game");
+        }
+    }
     private void renamePlayer(String name,String newName, String newAddress,int newType) {
 
         if ("".equals(name) || "".equals(newName) || "".equals(newAddress) || newType==-1) {
@@ -2896,24 +2196,13 @@ public class Risk extends Thread {
         // get all the players and make all with the ip of the leaver become nutral
         List players = game.getPlayers();
         Player leaver=null,newNamePlayer=null;
-        for (int c=0; c< players.size(); c++) {
+        int size = players.size();
+        for (int c=0; c< size; c++) {
             Player player = (Player)players.get(c);
-            if (player.getName().equals(newName)) {
-                newNamePlayer = player;
-            }
-            if (player.getName().equals(name)) {
-                leaver=player;
-            }
+            renameP2(player,newName,name,leaver);
         }
-
-        if (leaver==null) {
-            throw new IllegalArgumentException("can not find player with name \""+name+"\"");
-        }
-        if (newNamePlayer!=null && !name.equals(newName)) {
-            throw new IllegalArgumentException("can not rename \""+name+"\". someone with new name \""+newName+"\" is already in this game");
-        }
-
         // AI will never have players addr for lobby game
+        renameP3(leaver,name,newName);
         leaver.rename( newName );
         leaver.setType( newType );
         leaver.setAddress( newAddress );
@@ -2922,23 +2211,4 @@ public class Risk extends Thread {
             onlinePlayClient.playerRenamed(name,newName, newAddress,newType);
         }
     }
-
-    public void setAddress(String address) {
-        myAddress = address;
-    }
-
-    public Player findEmptySpot() {
-        if (game!=null) {
-            List players = game.getPlayers();
-            for (int c=0; c< players.size() ; c++) {
-                Player player = (Player)players.get(c);
-                if ( player.getType() == Player.PLAYER_AI_CRAP && player.isAlive()) {
-                    return player;
-                }
-            }
-        }
-        return null;
-    }
-
-
 }

@@ -75,6 +75,17 @@ public class AIDomination extends AISubmissive {
             }
             return p.getCards().size() - ps.p.getCards().size();
         }
+        public boolean equals(Object o) {
+            boolean isEquals = false;
+            PlayerState other = (PlayerState)o;
+            if(other.armies == armies)
+                isEquals = true;
+            return isEquals;
+        }
+        @Override
+        public int hashCode() {
+            return armies;
+        }
 
         public String toString() {
             return p.toString();
@@ -132,7 +143,17 @@ public class AIDomination extends AISubmissive {
             }
             return targetCountry.getColor() - obj.targetCountry.getColor();
         }
-
+        public boolean equals(Object o) {
+            boolean isEquals = false;
+            AttackTarget other = (AttackTarget)o;
+            if(other.depth == depth)
+                isEquals = true;
+            return isEquals;
+        }
+        @Override
+        public int hashCode() {
+            return depth;
+        }
         public AttackTarget clone() {
             try {
                 return (AttackTarget) super.clone();
@@ -152,6 +173,7 @@ public class AIDomination extends AISubmissive {
         boolean target;
         boolean allOrNone;
         Continent co;
+        int value = 5;
 
         public int compareTo(EliminationTarget other) {
             if (this.target) {
@@ -166,7 +188,17 @@ public class AIDomination extends AISubmissive {
             }
             return ps.defenseValue - other.ps.defenseValue;
         }
-
+        public boolean equals(Object o) {
+            boolean isEquals = false;
+            EliminationTarget other = (EliminationTarget)o;
+            if(other.value == value)
+                isEquals = true;
+            return isEquals;
+        }
+        @Override
+        public int hashCode() {
+            return value;
+        }
         public String toString() {
             return "Eliminate " + (co != null?co:ps.p);
         }

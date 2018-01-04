@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +31,7 @@ import net.yura.domination.engine.translation.TranslationBundle;
  * @author Yura Mamyrin
  */
 
-public class RiskGame implements Serializable { // transient
+public final class RiskGame implements Serializable { // transient
 
 	private static final long serialVersionUID = 8L;
 	/**
@@ -49,7 +50,7 @@ public class RiskGame implements Serializable { // transient
 	 * costant about Type Continent
 	 */
 	public final static Continent ANY_CONTINENT = new Continent("any","any", 0, 0);
-	
+
 	/**
 	 * Costant int State New Game integer Type Level 0
 	 */
@@ -62,7 +63,7 @@ public class RiskGame implements Serializable { // transient
 	 * Costant int State Place about Armies integer Type Level 1
 	 */
 	public final static int STATE_PLACE_ARMIES    = 2;
-	
+
 	/**
 	 * Costant int State Attacking integer Type Level 3
 	 */
@@ -95,7 +96,7 @@ public class RiskGame implements Serializable { // transient
 	 * Costant int Defend youself Type Level 10
 	 */
 	public final static int STATE_DEFEND_YOURSELF = 10;
-	
+
 	/**
 	 * Costant int State Modality Domination Type Level 0
 	 */
@@ -122,12 +123,12 @@ public class RiskGame implements Serializable { // transient
 	 * Costant int State Card Italian Like Type Level 2
 	 */
 	public final static int CARD_ITALIANLIKE_SET = 2;
-	
+
 	/**
 	 * Costant int State MAXCARD Type Level 5
 	 */
 
-        public final static int MAX_CARDS = 5;
+	public final static int MAX_CARDS = 5;
 
 /*
 
@@ -165,8 +166,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 */
 
-	private static String defaultMap;
-	private static String defaultCards;
+
 
 
 
@@ -217,7 +217,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 	private String ImageMap;
 	private String previewPic;
 
-        private Map properties;
+	private Map properties;
 
 	private Vector replayCommands;
 	private int maxDefendDice;
@@ -232,10 +232,9 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 */
 	public RiskGame() throws Exception {
 
-		//try {
-
-			setMapfile("default");
-			setCardsfile("default");
+            //try {
+            
+		setCardsfile("default");
 		//}
 		//catch (Exception e) {
 		//	RiskUtil.printStackTrace(e);
@@ -287,8 +286,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 */
 	public boolean addPlayer(int type, String name, int color, String a) {
 		if (gameState==STATE_NEW_GAME ) { // && !name.equals("neutral") && !(color==Color.gray)
-
-			for (int c=0; c< Players.size() ; c++) {
+                        int size = Players.size();
+			for (int c=0; c< size ; c++) {
 				if (( name.equals(((Player)Players.elementAt(c)).getName() )) || (color ==  ((Player)Players.elementAt(c)).getColor() )) return false;
 			}
 
@@ -309,8 +308,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 		if (gameState==STATE_NEW_GAME) {
 
 			int n=-1;
-
-			for (int c=0; c< Players.size() ; c++) {
+                        int size =  Players.size() ;
+			for (int c=0; c< size ; c++) {
 				if (name.equals( ((Player)Players.elementAt(c)).getName() )) n=c;
 			}
 			if (n==-1) {
@@ -332,67 +331,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * Starts the game Risk
 	 * @param mode This represents the moce of the game: normal, 2 player, capital or mission
 	 */
-	public void startGame(int mode, int card, boolean recycle, boolean threeDice) throws Exception {
-
-		if (gameState==STATE_NEW_GAME) { //  && ((mapfile !=null && cardsfile !=null) || () )
-
-			gameMode=mode;
-			cardMode=card;
-
-			recycleCards = recycle;
-                        maxDefendDice = threeDice?3:2;
-
-			// 2 player human crap
-			//if ( gameMode==1 && ( !(((Player)Players.elementAt(0)).getType()==0) || !(((Player)Players.elementAt(1)).getType()==0) ) ) { return; }
-
-
-			// check if things need to be loaded, maybe already loaded, then these will be null
-			if (mapfile!=null && cardsfile!=null) {
-
-
-				//try {
-
-					loadMap();
-
-				//}
-				//catch (Exception e) {
-				//	RiskUtil.printStackTrace(e);
-				//	return;
-				//}
-
-				try {
-
-					loadCards(false);
-
-				}
-				catch (Exception e) {
-
-					if (runmaptest) {
-
-						//System.out.println("LOAD FILE ERROR: " + e.getMessage() + "\n(This normally means you have selected the wrong set of cards for this map)"); // testing
-						//RiskUtil.printStackTrace(e);
-						throw new Exception("LOAD FILE ERROR: " + e.getMessage() + "\n(This normally means you have selected the wrong set of cards for this map)",e);
-
-					}
-
-					return;
-				}
-
-
-				if (runmaptest) {
-
-					//try {
-						testMap(); // testing maps
-					//}
-					//catch (Exception e) {
-					//	RiskUtil.printStackTrace(e);
-					//	return;
-					//}
-				}
-
-			}
-
-			if (Countries==null) { return; }
+        public void startGame1(){
+            if (Countries==null) { return; }
 
 			if (gameMode==MODE_SECRET_MISSION && Missions.size() < Players.size() ) { return; }
 
@@ -406,11 +346,76 @@ transient - A keyword in the Java programming language that indicates that a fie
 			//}
 			//
 			//System.out.print("Game Started\n"); // testing
-
-			for (int c=0; c< Players.size() ; c++) {
+                        int size = Players.size() ;
+			for (int c=0; c< size ; c++) {
 				((Player)Players.elementAt(c)).addArmies(armies);
 			}
 
+        }
+        public void startGame2(){
+            try {
+
+					loadCards(false);
+
+				}
+				catch (Exception e) {
+
+					if (runmaptest) {
+
+						//System.out.println("LOAD FILE ERROR: " + e.getMessage() + "\n(This normally means you have selected the wrong set of cards for this map)"); // testing
+						//RiskUtil.printStackTrace(e);
+						System.out.println("LOAD FILE ERROR: " + e.getMessage() + "\n(This normally means you have selected the wrong set of cards for this map)");
+
+					}
+
+					return;
+				}
+        }
+	public void startGame(int mode, int card, boolean recycle, boolean threeDice) throws Exception {
+
+		if (gameState==STATE_NEW_GAME) { //  && ((mapfile !=null && cardsfile !=null) || () )
+
+			gameMode=mode;
+			cardMode=card;
+
+			recycleCards = recycle;
+			maxDefendDice = threeDice?3:2;
+
+			// 2 player human crap
+			//if ( gameMode==1 && ( !(((Player)Players.elementAt(0)).getType()==0) || !(((Player)Players.elementAt(1)).getType()==0) ) ) { return; }
+
+
+			// check if things need to be loaded, maybe already loaded, then these will be null
+			if (mapfile!=null && cardsfile!=null) {
+
+
+				//try {
+
+				loadMap();
+
+				//}
+				//catch (Exception e) {
+				//	RiskUtil.printStackTrace(e);
+				//	return;
+				//}
+
+				startGame2();
+
+
+				if (runmaptest) {
+
+					//try {
+					testMap(); // testing maps
+					//}
+					//catch (Exception e) {
+					//	RiskUtil.printStackTrace(e);
+					//	return;
+					//}
+				}
+
+			}
+                        startGame1();
+			
 			gameState=STATE_PLACE_ARMIES;
 			capturedCountry=false;
 			tradeCap=false;
@@ -430,17 +435,17 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 			Country c1 = Countries[c];
 			Vector c1neighbours = (Vector)c1.getNeighbours();
+                         int size = c1neighbours.size();
+			if (c1neighbours.contains(c1)) { System.err.println("Error: "+c1.getName()+" neighbours with itself"); }
 
-			if (c1neighbours.contains(c1)) { throw new Exception("Error: "+c1.getName()+" neighbours with itself"); }
-
-			for (int a=0; a< c1neighbours.size() ; a++) {
+			for (int a=0; a< size ; a++) {
 
 				Country c2 = (Country)c1neighbours.elementAt(a);
 				Vector c2neighbours = (Vector)c2.getNeighbours();
 
 				boolean ok=false;
 
-				for (int b=0; b< c2neighbours.size() ; b++) {
+				for (int b=0; b< size ; b++) {
 
 					Country c3 = (Country)c2neighbours.elementAt(b);
 
@@ -461,11 +466,10 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 	/**
 	 * Sets the current player in the game
-	 * @param name The name of the current player
 	 * @return Player Returns the current player in the game
 	 */
 	public Player setCurrentPlayer(int c) {
-                currentPlayer = (Player)Players.get(c);
+		currentPlayer = (Player)Players.get(c);
 		return currentPlayer;
 
 	}
@@ -475,7 +479,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return String Returns the name of a randomly picked player from the set of players
 	 */
 	public int getRandomPlayer() {
-                return r.nextInt( Players.size() );
+		return r.nextInt( Players.size() );
 	}
 
 	/**
@@ -503,17 +507,17 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * Ends a player's go
 	 * @return Player Returns the next player
 	 */
-	public Player endGo() {
+        public void endGo1(){
+            	for (int c=0; c< Continents.length ; c++) {
 
-		if (gameState==STATE_END_TURN) {
-
-			//System.out.print("go ended\n"); // testing
-
-			// work out who is the next player
-
-			while (true) {
-
-				for (int c=0; c< Players.size() ; c++) {
+					if ( Continents[c].isOwned(currentPlayer) ) {
+						currentPlayer.addArmies( Continents[c].getArmyValue() );
+                                        }
+                }
+        }
+        public void endGo2(){
+            int size = Players.size();
+             for (int c=0; c< size ; c++) {
 					if ( currentPlayer==((Player)Players.elementAt(c)) && Players.size()==(c+1) ) {
 						currentPlayer=(Player)Players.elementAt(0);
 						c=Players.size();
@@ -523,10 +527,41 @@ transient - A keyword in the Java programming language that indicates that a fie
 						c=Players.size();
 					}
 				}
+         }
+        public void endGo3(){
+            if (getSetupDone() && gameMode==2 && currentPlayer.getCapital() == null) { // capital risk setup not finished
+				gameState=STATE_SELECT_CAPITAL;
+			}
+			else if ( canTrade()==false ) { // ie the initial setup has not been compleated or there are no cards that can be traded
+				gameState=STATE_PLACE_ARMIES;
+			}
+			else { // there are cards that can be traded
+				gameState=STATE_TRADE_CARDS;
+			}
+        }
+        public void endGo4(){
+            if ( currentPlayer.getNoTerritoriesOwned() < 9 ) {
+					currentPlayer.addArmies(3);
+				}
+				else {
+					currentPlayer.addArmies( currentPlayer.getNoTerritoriesOwned() / 3 );
+				}
+        }
+	public void endGo() {
+
+		if (gameState==STATE_END_TURN) {
+
+			//System.out.print("go ended\n"); // testing
+
+			// work out who is the next player
+
+			while (true) {
+                                         endGo2();
+				
 
 				if (!getSetupDone()) { break; }
 
-											// && (currentPlayer.getType() != 3)
+				// && (currentPlayer.getType() != 3)
 
 				else if ( currentPlayer.getNoTerritoriesOwned() > 0       ) {break; }
 
@@ -540,45 +575,25 @@ transient - A keyword in the Java programming language that indicates that a fie
 				currentPlayer.nextTurn();
 
 				// add new armies for the Territories Owned
-				if ( currentPlayer.getNoTerritoriesOwned() < 9 ) {
-					currentPlayer.addArmies(3);
-				}
-				else {
-					currentPlayer.addArmies( currentPlayer.getNoTerritoriesOwned() / 3 );
-				}
+				endGo4();
 
 				// add new armies for the Continents Owned
-				for (int c=0; c< Continents.length ; c++) {
-
-					if ( Continents[c].isOwned(currentPlayer) ) {
-						currentPlayer.addArmies( Continents[c].getArmyValue() );
-					}
-
-				}
+                                endGo1();
+			
 
 			}
-
-			if (getSetupDone() && gameMode==2 && currentPlayer.getCapital() == null) { // capital risk setup not finished
-				gameState=STATE_SELECT_CAPITAL;
-			}
-			else if ( canTrade()==false ) { // ie the initial setup has not been compleated or there are no cards that can be traded
-				gameState=STATE_PLACE_ARMIES;
-			}
-			else { // there are cards that can be traded
-				gameState=STATE_TRADE_CARDS;
-			}
+                          endGo3();
+			
 
 			capturedCountry=false;
 			tradeCap=false;
 
-			return currentPlayer;
+			
 
 		}
 		else {
+                    System.out.println("lala "+gameState);
 
-			//System.out.println("lala "+gameState);
-
-			return null;
 		}
 	}
 
@@ -589,129 +604,178 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @param card3 Third card to trade
 	 * @return int Returns the number of armies gained from the trade, returning 0 if the trade is unsuccessful
 	 */
-    public int trade(Card card1, Card card2, Card card3) {
-        if (gameState!=STATE_TRADE_CARDS) return 0;
+        public int trade1(){
+          
+            if (gameState!=STATE_TRADE_CARDS) return 0;
 
-        if (tradeCap && currentPlayer.getCards().size() < MAX_CARDS )
-            throw new RuntimeException("trying to do a trade when less then 5 cards and tradeCap is on");
-
-        int armies = getTradeAbsValue( card1.getName(), card2.getName(), card3.getName(), cardMode);
-
-        if (armies <= 0) return 0;
-
-        if (cardMode==CARD_INCREASING_SET) {
-            cardState=armies;
+		if (tradeCap && currentPlayer.getCards().size() < MAX_CARDS )
+			System.out.println("trying to do a trade when less then 5 cards and tradeCap is on");
+            return 0;
         }
-
-        currentPlayer.tradeInCards(card1, card2, card3);
-
-        //Return the cards to the deck
-        List used = getUsedCards();
-        used.add(card1);
-        used.add(card2);
-        used.add(card3);
-
-        recycleUsedCards();
-
-        currentPlayer.addArmies(armies);
-
-        // if tradeCap you must trade to redude your cards to 4 or fewer cards
-        // but once your hand is reduced to 4, 3 or 2 cards, you must stop trading
-        if ( !canTrade() || (tradeCap && currentPlayer.getCards().size() < MAX_CARDS ) ) {
-            gameState=STATE_PLACE_ARMIES;
-            tradeCap=false;
+        public int trade2(){
+            if (cardMode==CARD_INCREASING_SET) {
+                int armies = 0;
+			cardState=armies;
+		}
+            return 0;
         }
+	public int trade(Card card1, Card card2, Card card3) {
+		trade1();
 
-        return armies;
-    }
+		int armies = getTradeAbsValue( card1.getName(), card2.getName(), card3.getName(), cardMode);
 
-    /**
-     * Returns the trading value of the given cards, without taking into account
-     * the territories associated to the cards.
-     * @param c1 The name of the type of the first card.
-     * @param c2 The name of the type of the second card.
-     * @param c3 The name of the type of the third card.
-     * @return 0 in case of invalid combination of cards.
-     */
-    public int getTradeAbsValue(String c1, String c2, String c3,int cardMode) {
-        int armies=0;
+		if (armies <= 0) return 0;
 
-        // we shift all wildcards to the front
-        if (!c1.equals(Card.WILDCARD)) { String n4 = c3; c3 = c1; c1 = n4; }
-        if (!c2.equals(Card.WILDCARD)) { String n4 = c3; c3 = c2; c2 = n4; }
-        if (!c1.equals(Card.WILDCARD)) { String n4 = c2; c2 = c1; c1 = n4; }
+		trade2();
 
-        if (cardMode == CARD_INCREASING_SET) {
-            if (
-                    c1.equals(Card.WILDCARD) ||
-                    (c1.equals(c2) && c1.equals(c3)) ||
-                    (!c1.equals(c2) && !c1.equals(c3) && !c2.equals(c3))
-                ) {
-                armies = getNewCardState();
-            }
+		currentPlayer.tradeInCards(card1, card2, card3);
+
+		//Return the cards to the deck
+		List used = getUsedCards();
+		used.add(card1);
+		used.add(card2);
+		used.add(card3);
+
+		recycleUsedCards();
+
+		currentPlayer.addArmies(armies);
+
+		// if tradeCap you must trade to redude your cards to 4 or fewer cards
+		// but once your hand is reduced to 4, 3 or 2 cards, you must stop trading
+		if ( !canTrade() || (tradeCap && currentPlayer.getCards().size() < MAX_CARDS ) ) {
+			gameState=STATE_PLACE_ARMIES;
+			tradeCap=false;
+		}
+
+		return armies;
+	}
+
+	/**
+	 * Returns the trading value of the given cards, without taking into account
+	 * the territories associated to the cards.
+	 * @param c1 The name of the type of the first card.
+	 * @param c2 The name of the type of the second card.
+	 * @param c3 The name of the type of the third card.
+	 * @return 0 in case of invalid combination of cards.
+	 */
+        public int getTradeAbsValue1(){
+            String c1 = null;
+            String c3 = null;
+            if (!c1.equals(Card.WILDCARD)) { String n4 = c3; c3 = c1; c1 = n4; }
+            String c2 = null;
+		if (!c2.equals(Card.WILDCARD)) { String n4 = c3; c3 = c2; c2 = n4; }
+		if (!c1.equals(Card.WILDCARD)) { String n4 = c2; c2 = c1; c1 = n4; }
+            return 0;
         }
-        else if (cardMode == CARD_FIXED_SET) {
-            // ALL THE SAME or 'have 1 wildcard and 2 the same'
+        public int getTradeAbsValue2(){
+            if (cardMode == CARD_INCREASING_SET) {
+			if (
+					c1.equals(Card.WILDCARD) ||
+							(c1.equals(c2) && c1.equals(c3)) ||
+							(!c1.equals(c2) && !c1.equals(c3) && !c2.equals(c3))
+					) {
+                            System.out.println("error");
+                            
+			}
+		}
+            return 0;
+        }
+        public int getTradeAbsValue3(){
             if ((c1.equals(c2) || c1.equals(Card.WILDCARD)) && c2.equals(c3)) {
-                while(c3.equals(Card.INFANTRY)) {
-                    armies = 4;
-                    break;
-                }
-                while (c3.equals(Card.CAVALRY)) {
-                    armies = 6;
-                    break;
-                }
-                while(c3.equals(Card.CANNON)) {
-                    armies = 8;
-                    break;
-                }
-                while (c1.equals( Card.WILDCARD )) { // (c1.equals( Card.WILDCARD ))
-                    armies = 12; 
-                    break;// Incase someone puts 3 wildcards into his set
-                }
-            }
-            // ALL CARDS ARE DIFFERENT (can have 1 wildcard) or 2 wildcards and a 3rd card
-            else if (
-                    (c1.equals(Card.WILDCARD) && c2.equals(Card.WILDCARD)) ||
-                    (!c1.equals(c2) && !c2.equals(c3) && !c1.equals(c3))
-                    ) {
-                armies = 10;
-            }
+                boolean size = c3.equals(Card.INFANTRY);
+				while(size) {
+                                    
+					break;
+				}
+                    boolean size1 = c3.equals(Card.CAVALRY);            
+				while (size1) {
+                                  
+					break;
+				}
+                                boolean size2 = c3.equals(Card.CANNON);
+				while(size2) {
+                                 
+					break;
+				}
+                                boolean size3 = c1.equals( Card.WILDCARD );
+				while (size3) { // (c1.equals( Card.WILDCARD ))
+                                   
+					break;// Incase someone puts 3 wildcards into his set
+				}
+			}
+            return 0;
         }
-        else { // (cardMode==CARD_ITALIANLIKE_SET)
+        public int getTradeAbsValue4(){
+            if (
+					(c1.equals(Card.WILDCARD) && c2.equals(Card.WILDCARD)) ||
+							(!c1.equals(c2) && !c2.equals(c3) && !c1.equals(c3))
+					) {
+                System.out.print("");
+              
+			}
+            return 0;
+        }
+        public int getTradeAbsValue5(){
             if (c1.equals(c2) && c1.equals(c3)) {
-                // All equal
-                while (c1.equals(Card.CAVALRY)) {
-                    armies = 8;
-                    break;
-                }
-                while(c1.equals(Card.INFANTRY)) {
-                    armies = 6;
-                    break;
-                }
-                while (c1.equals(Card.CANNON)) {
-                    armies = 4;
-                    break;
-                }
-                while (c1.equals( Card.WILDCARD )){ // (c1.equals( Card.WILDCARD ))
-                    armies = 0; // Incase someone puts 3 wildcards into his set
-                    break;
-                }
-            }
-            else if (!c1.equals(c2) && !c2.equals(c3) && !c1.equals(c3) && !c1.equals(Card.WILDCARD)) {
-                armies = 10;
-            }
-            //All the same w/1 wildcard
-            else if (c1.equals(Card.WILDCARD) && c2.equals(c3)) {
-                armies = 12;
-            }
-            //2 wildcards, or a wildcard and two different
-            else {
-                armies = 0;
-            }
+				// All equal
+                                boolean size = c1.equals(Card.CAVALRY);
+				while (size) {
+                                    
+					break;
+				}
+                                boolean size1 = c1.equals(Card.INFANTRY);
+				while(size1) {
+                                  
+					break;
+				}
+                                boolean size2 = c1.equals(Card.CANNON);
+				while (size2) {
+					
+					break;
+				}
+                                boolean size3 = c1.equals( Card.WILDCARD );
+				while (size3){ // (c1.equals( Card.WILDCARD ))
+					 // Incase someone puts 3 wildcards into his set
+					break;
+				}
+			}
+            return 0;
         }
-        return armies;
-    }
+        public int getTradeAbsValue6(){
+            if (!c1.equals(c2) && !c2.equals(c3) && !c1.equals(c3) && !c1.equals(Card.WILDCARD)) {
+                            System.out.print("");
+			}
+			//All the same w/1 wildcard
+			else if (c1.equals(Card.WILDCARD) && c2.equals(c3)) {
+           System.out.print("");
+			}
+			//2 wildcards, or a wildcard and two different
+			else {
+                System.out.print("");
+			}
+            return 0;
+        }
+	public int getTradeAbsValue() {
+		int armies=0;
+
+		// we shift all wildcards to the front
+		getTradeAbsValue1();
+
+		getTradeAbsValue2();
+		if (cardMode == CARD_FIXED_SET) {
+                    getTradeAbsValue3();
+			// ALL THE SAME or 'have 1 wildcard and 2 the same'
+			
+			// ALL CARDS ARE DIFFERENT (can have 1 wildcard) or 2 wildcards and a 3rd card
+			getTradeAbsValue4();
+		}
+		else { // (cardMode==CARD_ITALIANLIKE_SET)
+                    getTradeAbsValue5();
+			getTradeAbsValue6();
+			
+		}
+		return armies;
+	}
 
 	public boolean canTrade() {
 		return getBestTrade(currentPlayer.getCards(), null) > 0;
@@ -723,9 +787,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @param cards
 	 * @return
 	 */
-	public int getBestTrade(List<Card> cards, Card[] bestResult) {
-		Map<String, List<Card>> cardTypes = new HashMap<String, List<Card>>();
-		for (Card card : cards) {
+        public int getBestTrade1(){
+            for (Card card : cards) {
 			List<Card> cardType = cardTypes.get(card.getName());
 			if (cardType == null) {
 				cardType = new ArrayList<Card>();
@@ -733,62 +796,95 @@ transient - A keyword in the Java programming language that indicates that a fie
 			}
 			cardType.add(card);
 		}
-		Card carda = null;
-		Card cardb = null;
-		Card cardc = null;
-		int bestValue = 0;
-		if (cardTypes.size() >= 3) {
-			carda = getCard(cardTypes, Card.CANNON);
+            return 0;
+        }
+        public int getBestTrade2(){
+            Object bestResult = null;
+            RiskGame carda = getCard(cardTypes, Card.CANNON);
 			if (carda == null) {
 				carda = getCard(cardTypes, Card.WILDCARD);
 			}
-			cardb = getCard(cardTypes, Card.CAVALRY);
+            RiskGame cardb = getCard(cardTypes, Card.CAVALRY);
 			if (cardb == null) {
 				cardb = getCard(cardTypes, Card.WILDCARD);
 			}
-			cardc = getCard(cardTypes, Card.INFANTRY);
+            RiskGame cardc = getCard(cardTypes, Card.INFANTRY);
 			if (cardc == null) {
 				cardc = getCard(cardTypes, Card.WILDCARD);
 			}
-			bestValue = getTradeAbsValue( carda.getName(), cardb.getName(), cardc.getName(), getCardMode());
+            RiskGame bestValue = getTradeAbsValue( carda.getName(), cardb.getName(), cardc.getName(), getCardMode());
 			if (bestValue > 0) {
+                
 				if (bestResult == null) {
-					return bestValue;
+					return 2;
 				}
-				bestResult[0] = carda;
-				bestResult[1] = cardb;
-				bestResult[2] = cardc;
+				
 			}
-		}
-		List<Card> wildCards = cardTypes.get(Card.WILDCARD);
-		int wildCardCount = wildCards==null?0:wildCards.size();
-		for (Map.Entry<String, List<Card>> entry : cardTypes.entrySet()) {
-			carda = null;
+            return 0;
+        }
+                public int getBestTrade3(){
+            Object carda = null;
+            Object cardb = null;
+            Object cardc = null;
 			if (entry.getKey().equals(Card.WILDCARD)) {
+                int wildCardCount = 0;
 				if (wildCardCount >= 3) {
 					carda = wildCards.get(0);
 					cardb = wildCards.get(1);
 					cardc = wildCards.get(2);
 				}
-			} else {
-				List<Card> cardList = entry.getValue();
-				if (cardList.size() + wildCardCount >= 3) {
+        }
+            return 0;
+        
+        }
+       public int getBestTrade4(){
+            int val = getTradeAbsValue( carda.getName(), cardb.getName(), cardc.getName(), getCardMode());
+            int bestValue = 0;
+				if (val > bestValue) {
+					bestValue = val;
+                Object bestResult = null;
+					if (bestResult == null) {
+						return bestValue;
+					}
+					
+				}
+            return 0;
+        }
+       public int getBestTrade5(){
+            int wildCardCount = 0;
+            List<Card> cardList = entry.getValue();
+             Object carda = null;
+            Object cardb = null;
+            Object cardc = null;
+           if (cardList.size() + wildCardCount >= 3) {
 					carda = cardList.get(0);
 					cardb = cardList.size()>1?cardList.get(1):wildCards.get(0);
 					cardc = cardList.size()>2?cardList.get(2):wildCards.get(2-cardList.size());
 				}
+            return 0;
+       }
+	public int getBestTrade(List<Card> cards, Card[] bestResult) {
+		Map<String, List<Card>> cardTypes = new HashMap<String, List<Card>>();
+                getBestTrade1();
+		
+		Card carda = null;
+		
+		int bestValue = 0;
+		if (cardTypes.size() >= 3) {
+		getBestTrade2();
+		}
+		
+		
+		for (Map.Entry<String, List<Card>> entry : cardTypes.entrySet()) {
+                   
+			if(carda == null){
+                     getBestTrade3();
+				
+				getBestTrade5();
 			}
+                     
 			if (carda != null) {
-				int val = getTradeAbsValue( carda.getName(), cardb.getName(), cardc.getName(), getCardMode());
-				if (val > bestValue) {
-					bestValue = val;
-					if (bestResult == null) {
-						return bestValue;
-					}
-					bestResult[0] = carda;
-					bestResult[1] = cardb;
-					bestResult[2] = cardc;
-				}
+				 getBestTrade4();
 			}
 		}
 		return bestValue;
@@ -827,27 +923,27 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return boolean true if they can be traded false if they can not
 	 */
 	public boolean checkTrade(Card card1, Card card2, Card card3) {
-            return getTradeAbsValue( card1.getName(), card2.getName(), card3.getName(), cardMode) > 0;
+		return getTradeAbsValue( card1.getName(), card2.getName(), card3.getName(), cardMode) > 0;
 	}
 
-        /**
+	/**
 	 * Ends the trading phase by checking if the player has less than 5 cards
 	 * @return boolean Returns true if the player has ended the trade phase, returns false if the player cannot end the trade phase
 	 */
 	public boolean endTrade() {
-            if (canEndTrade()) {
-                gameState=STATE_PLACE_ARMIES;
-                if (tradeCap) {
-                    throw new RuntimeException("endTrade worked when tradeCap was true");
-                }
-                return true;
-            }
-            return false;
+		if (canEndTrade()) {
+			gameState=STATE_PLACE_ARMIES;
+			if (tradeCap) {
+				System.err.println("endTrade worked when tradeCap was true");
+			}
+			return true;
+		}
+		return false;
 	}
 
-        public boolean canEndTrade() {
+	public boolean canEndTrade() {
 		if (gameState==STATE_TRADE_CARDS) {
-                        //in italian rules there isn't a limit to the number of risk cards that you can hold in your hand.
+			//in italian rules there isn't a limit to the number of risk cards that you can hold in your hand.
 			if (cardMode == CARD_ITALIANLIKE_SET || currentPlayer.getCards().size() < MAX_CARDS) {
 				return true;
 			}
@@ -861,24 +957,24 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @param n Number of armies the player wants to add to the country
 	 * @return boolean Returns true if the number of armies are added the country, returns false if the armies cannot be added to the territory
 	 */
-	public int placeArmy(Country t, int n) {
-
-		int done=0;
-
-		if ( gameState==STATE_PLACE_ARMIES ) {
-
-			if ( !getSetupDone() ) { // ie the initial setup has not been compleated
-				if (n != 1) return 0;
-				// if it has the player as a owner
-				if ( t.getOwner()==currentPlayer ) {
-
-					while ( NoEmptyCountries() ) { // no empty country are found
+        public int placeArmy1(){
+            boolean size = NoEmptyCountries();
+            while ( size ) { // no empty country are found
 						t.addArmy();
 						currentPlayer.loseExtraArmy(1);
-						done=1;
+               
 						break;
 						//System.out.print("army placed in: " + t.getName() + "\n"); // testing
 					}
+            return 0;
+        }
+        public int placeArmy2(){
+            int n = 0;
+            if (n != 1) return 0;
+				// if it has the player as a owner
+				if ( t.getOwner()==currentPlayer ) {
+
+					placeArmy1();
 
 				}
 				// if there is no owner
@@ -888,38 +984,39 @@ transient - A keyword in the Java programming language that indicates that a fie
 					currentPlayer.newCountry(t);
 					t.addArmy();
 					currentPlayer.loseExtraArmy(1);
-					done=1;
-					//System.out.print("country taken and army placed in: " + t.getName() + "\n"); // testing
+               
+                //System.out.print("country taken and army placed in: " + t.getName() + "\n"); // testing
 				}
+            return 0;
 
-			}
-			else { // initial setup is completed
-
-				// if it has the player as a owner
-				if ( t.getOwner()==currentPlayer && currentPlayer.getExtraArmies() >=n ) {
+        }
+        public int placeArmy3(){
+            boolean n = false;
+            if ( t.getOwner()==currentPlayer && currentPlayer.getExtraArmies() >=n ) {
 
 					currentPlayer.currentStatistic.addReinforcements(n);
 
 					t.addArmies(n);
 					currentPlayer.loseExtraArmy(n);
-					//System.out.print("army placed in: " + t.getName() + "\n"); // testing
-					done=1;
+                //System.out.print("army placed in: " + t.getName() + "\n"); // testing
+         
 
 				}
-			}
-
-			if (done==1) {
-
-				if (getSetupDone() ) { // ie the initial setup has been compleated
-					while ( currentPlayer.getExtraArmies()==0 ) { gameState=STATE_ATTACKING;
-					break;
+            return 0;
+        }
+        public int placeArmy4(){
+            if (getSetupDone() ) { // ie the initial setup has been compleated
+                                        int size = currentPlayer.getExtraArmies();
+					while ( size == 0 ) { gameState=STATE_ATTACKING;
+						break;
 					}
-					while(!( currentPlayer.getExtraArmies()==0 )) { gameState=STATE_PLACE_ARMIES;
-					break;
+					while(!( size == 0 )) { gameState=STATE_PLACE_ARMIES;
+						break;
 					}
 				}
 				else { // initial setup is not compleated
-					while (currentPlayer.getExtraArmies()==0) {
+                int size = currentPlayer.getExtraArmies();
+					while (size==0) {
 						setup++; // another player has finished initial setup
 						break;
 					}
@@ -929,8 +1026,28 @@ transient - A keyword in the Java programming language that indicates that a fie
 				}
 
 				if ( checkPlayerWon() ) {
-					done=2;
+                 System.out.print("");
 				}
+            return 0;
+        }
+	public int placeArmy(Country t, int n) {
+
+		int done=0;
+
+		if ( gameState==STATE_PLACE_ARMIES ) {
+
+			if ( !getSetupDone() ) { // ie the initial setup has not been compleated
+				placeArmy2();
+			}
+			else { // initial setup is completed
+                                placeArmy3();
+				// if it has the player as a owner
+				
+			}
+
+			if (done==1) {
+                                  placeArmy4();
+				
 
 			}
 
@@ -943,31 +1060,44 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * Automatically places an army on an unoccupied country
 	 * @return int Returns the country id which an army was added to
 	 */
-	public int getRandomCountry() {
-                if (gameState==STATE_PLACE_ARMIES) {
-                    if ( NoEmptyCountries() ) {
-                        List countries = currentPlayer.getTerritoriesOwned();
-                        return ((Country)countries.get( r.nextInt(countries.size()) )).getColor();
-                    }
-                    else {
-                        // find a empty country
-                        int a = r.nextInt(Countries.length);
-			boolean done = false;
-			for (int c=a; c < Countries.length ; c++) {
-				if ( Countries[c].getOwner() == null ) {
-					return Countries[c].getColor();
-				}
-				else if ( c == Countries.length-1 && !done ) {
-					c = -1;
-					done = true;
-				}
-				else if ( c == Countries.length-1 && done ) {
-					break;
+        public int getRandomCountry2() {
+            if ( NoEmptyCountries() ) {
+				List countries = currentPlayer.getTerritoriesOwned();
+				return ((Country)countries.get( r.nextInt(countries.size()) )).getColor();
+			}
+			else {
+				// find a empty country
+				int a = r.nextInt(Countries.length);
+				
+				for (int c=a; c < Countries.length ; c++) {
+                                    getRandomCountry1();
+					
 				}
 			}
-                    }
-                }
-                throw new IllegalStateException();
+            return 0;
+            
+        }
+        public int getRandomCountry1() {
+            
+            int c = 0;
+            boolean done = false;
+            if ( Countries[c].getOwner() == null ) {
+						return Countries[c].getColor();
+					}
+					else if ( c == Countries.length-1 && !done ) {
+						c = -1;
+						done = true;
+					}
+					else if ( c == Countries.length-1 && done ) {
+						System.out.println("error");
+					}
+            return 0;
+        }
+	public int getRandomCountry() {
+		if (gameState==STATE_PLACE_ARMIES) {
+			getRandomCountry2();
+		}
+		throw new IllegalStateException();
 	}
 
 	/**
@@ -984,13 +1114,13 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 			if (
 					t1!=null &&
-					t2!=null &&
-					t1.getOwner()==currentPlayer &&
-					t2.getOwner()!=currentPlayer &&
-					t1.isNeighbours(t2) &&
-					// t2.isNeighbours(t1) && // not needed as there is code to check this
-					t1.getArmies() > 1
-			) {
+							t2!=null &&
+							t1.getOwner()==currentPlayer &&
+							t2.getOwner()!=currentPlayer &&
+							t1.isNeighbours(t2) &&
+							// t2.isNeighbours(t1) && // not needed as there is code to check this
+							t1.getArmies() > 1
+					) {
 
 				currentPlayer.currentStatistic.addAttack();
 				((Player)t2.getOwner()).currentStatistic.addAttacked();
@@ -1097,49 +1227,10 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @param defenderResults The results for the defender
 	 * @return int[] Returns an array which will determine the results of the attack
 	 */
-	public int[] battle(int[] attackerResults, int[] defenderResults) {
-
-		int[] result = new int[6];
-		result[0]=0; // worked or not
-		result[1]=0; // no of armies attacker lost
-		result[2]=0; // no of armies defender lost
-		result[3]=0; // did you win
-		result[4]=0; // min move
-		result[5]=0; // max move
-
-		if (gameState==STATE_DEFEND_YOURSELF) { // if we were in the defending phase
-			battleRounds++;
-
-                        for (int aResult:attackerResults) {
-                            attacker.getOwner().currentStatistic.addDice(aResult);
-                        }
-                        for (int aResult:defenderResults) {
-                            defender.getOwner().currentStatistic.addDice(aResult);
-                        }
-
-			// battle away!
-			for (int c=0; c< Math.min(attackerResults.length, defenderResults.length) ; c++) {
-
-				if (attackerResults[c] > defenderResults[c]) {
-					defender.looseArmy();
-					defender.getOwner().currentStatistic.addCasualty();
-					attacker.getOwner().currentStatistic.addKill();
-					result[2]++;
-				}
-				else {
-					attacker.looseArmy();
-					attacker.getOwner().currentStatistic.addCasualty();
-					defender.getOwner().currentStatistic.addKill();
-					result[1]++;
-				}
-
-			}
-
-			// if all the armies have been defeated
-			if (defender.getArmies() == 0) {
-
-				((Player)attacker.getOwner()).currentStatistic.addCountriesWon();
+        public int[] battle4(){
+            ((Player)attacker.getOwner()).currentStatistic.addCountriesWon();
 				((Player)defender.getOwner()).currentStatistic.addCountriesLost();
+            int[] result = null;
 
 				result[5]=attacker.getArmies()-1;
 
@@ -1160,28 +1251,95 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 				// if the player has been eliminated
 				if ( lostPlayer.getNoTerritoriesOwned() == 0) {
+                                               battle3();
+				
 
-					result[3]=2;
+				}
 
+            return null;
+            
+        }
+        public int[] battle3(){
+            int[] result = null;
+         	result[3]=2;
+                                   Player lostPlayer=(Player)defender.getOwner();
 					currentPlayer.addPlayersEliminated(lostPlayer);
-
-					while (lostPlayer.getCards().size() > 0) {
+                                        int size = lostPlayer.getCards().size();
+					while (size > 0) {
 
 						//System.out.print("Hes got a card .. i must take it!\n");
 						currentPlayer.giveCard( lostPlayer.takeCard() );
 
 					}
 
-                                        // in italian rules there is no limit to the number of cards you can hold
-                                        // if winning the other players cards gives you 6 or more cards you must immediately trade
-					while ( cardMode!=CARD_ITALIANLIKE_SET && currentPlayer.getCards().size() > MAX_CARDS) {
+					// in italian rules there is no limit to the number of cards you can hold
+					// if winning the other players cards gives you 6 or more cards you must immediately trade
+					 size = currentPlayer.getCards().size();
+                                        while ( cardMode!=CARD_ITALIANLIKE_SET && size > MAX_CARDS) {
 						// gameState=STATE_BATTLE_WON;
 						tradeCap=true;
 						break;
 					}
-
+               return null;
+        }
+        public int[] battle2(){
+            int[] attackerResults = null;
+            int c = 0;
+            int[] defenderResults = null;
+            if (attackerResults[c] > defenderResults[c]) {
+					defender.looseArmy();
+					defender.getOwner().currentStatistic.addCasualty();
+					attacker.getOwner().currentStatistic.addKill();
+                int[] result = null;
+					result[2]++;
 				}
+				else {
+					attacker.looseArmy();
+					attacker.getOwner().currentStatistic.addCasualty();
+					defender.getOwner().currentStatistic.addKill();
+                int[] result = null;
+					result[1]++;
+				}
+            return null;
+        }
+        public int[] battle1(){
+            int[] attackerResults = null;
+            for (int aResult:attackerResults) {
+				attacker.getOwner().currentStatistic.addDice(aResult);
+			}
+            int[] defenderResults = null;
+			for (int aResult:defenderResults) {
+				defender.getOwner().currentStatistic.addDice(aResult);
+			}
+            return null;
+        }
+	public int[] battle(int[] attackerResults, int[] defenderResults) {
 
+		int[] result = new int[6];
+		result[0]=0; // worked or not
+		result[1]=0; // no of armies attacker lost
+		result[2]=0; // no of armies defender lost
+		result[3]=0; // did you win
+		result[4]=0; // min move
+		result[5]=0; // max move
+
+		if (gameState==STATE_DEFEND_YOURSELF) { // if we were in the defending phase
+			battleRounds++;
+
+			battle1();
+
+			// battle away!
+                        int size = Math.min(attackerResults.length, defenderResults.length);
+			for (int c=0; c< size ; c++) {
+
+				battle2();
+
+			}
+
+			// if all the armies have been defeated
+			if (defender.getArmies() == 0) {
+                                 battle4();
+				
 			}
 			else if (attacker.getArmies() == 1) {
 				gameState=STATE_ATTACKING;
@@ -1275,14 +1433,14 @@ transient - A keyword in the Java programming language that indicates that a fie
 			// do they exist //check if they belong to the player //check if they are neighbours //check if there are enough troops in country1
 			if (
 					t1!=null &&
-					t2!=null &&
-					t1.getOwner()==currentPlayer &&
-					t2.getOwner()==currentPlayer &&
-					t1.isNeighbours(t2) &&
-					// t2.isNeighbours(t1) && // not needed as there is code to check this
-					t1.getArmies() > noa &&
-					noa > 0
-			) {
+							t2!=null &&
+							t1.getOwner()==currentPlayer &&
+							t2.getOwner()==currentPlayer &&
+							t1.isNeighbours(t2) &&
+							// t2.isNeighbours(t1) && // not needed as there is code to check this
+							t1.getArmies() > noa &&
+							noa > 0
+					) {
 
 				t1.removeArmies(noa);
 				t2.addArmies(noa);
@@ -1362,8 +1520,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @param p The current player
 	 */
 	public void getConnectedEmpire(List t, List a, List n, Player p) {
-
-		for (int i = 0; i < n.size() ; i++) {
+                    int size = n.size() ;
+		for (int i = 0; i < size ; i++) {
 
 			if ( ((Country)n.get(i)).getOwner() == p && t.contains( n.get(i) ) ) {
 
@@ -1389,8 +1547,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 		if (gameState== STATE_SELECT_CAPITAL && gameMode == 2 && c.getOwner()==currentPlayer && currentPlayer.getCapital()==null) {
 
 			currentPlayer.setCapital(c);
-
-			for (int b=0; b< Cards.size() ; b++) {
+                        int size = Cards.size();
+			for (int b=0; b< size ; b++) {
 
 				if ( c== ((Card)Cards.elementAt(b)).getCountry() ) {
 					Cards.removeElementAt(b);
@@ -1412,64 +1570,62 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * Check if a player has won the game
 	 * @return boolean Returns true if the player has won the game, returns false otherwise
 	 */
-	public boolean checkPlayerWon() {
+        
+        public boolean checkPlayerWon1(){
+           
+            Object size = m.getContinent1();
+            Object size1 = m.getContinent2();
+            Object size2 = m.getContinent3();
+            boolean size4 = checkPlayerOwnesContinentForMission(size,1);
+            boolean size5 = checkPlayerOwnesContinentForMission(size1,2);
+            boolean size6 =  checkPlayerOwnesContinentForMission(size2,3);       
+            while (
+					(size !=null) && // this means its a continent mission
 
-		boolean result=false;
+							size4 &&
+							size5 &&
+							size6
 
-		// check if the player has won
-		int won=0;
-		for (int c=0; c< Continents.length ; c++) {
+					) {
 
-			if ( Continents[c].isOwned(currentPlayer) ) {
-				won++;
-			}
-
-		}
-		if (won == Continents.length ) {
-
-			result=true;
-			//System.out.print("The Game Is Over, "+currentPlayer.getName()+" has won!\n");
-
-		}
-
-		// check if the player has won 2 player risk
-
-/* @todo: maybe add this back, as crap player can never win
-
-		else if (getSetupDone() && gameMode==1) {
-
-			Player target=null;
-
-			for (int c=0; c< Players.size() ; c++) {
-
-
-					// ((Player)Players.elementAt(c)).getType() !=3 &&
-
-				if (        (Player)Players.elementAt(c) != currentPlayer ) {
-					target = (Player)Players.elementAt(c);
-				}
+                // yay you have won
+            
+				break;
 
 			}
+            return true;
+        }
+        public boolean checkPlayerWon2(){
+             int size = currentPlayer.getNoTerritoriesOwned();
+            int size1 = m.getNoofcountries();
+            int size2 = m.getNoofarmies();
+            Object size5 = m.getPlayer();
+        int size4 = (Player)m.getPlayer();
 
-			if ( target.getNoTerritoriesOwned()==0 ) {
+            while (
+					 size1 != 0 && size2 != 0 && // check if this card has a value for capture teretories
+							( size5 == null || (size4 ==0 || (Player)size5 == currentPlayer ) &&
+							size1 <= size // do you have that number of countries captured
+					)) {
 
-				result=true;
-
+			
+                               
+				for (int c=0; c< size ; c++) {
+                                checkPlayerWon6();
+				break;
 			}
-
-		}
-*/
-
-		// check if the player has won capital risk!
-		else if (getSetupDone() && gameMode==MODE_CAPITAL && currentPlayer.getCapital() !=null ) {
-
-			int capitalcount=0;
+            return false;
+        }   return false;
+}
+        public boolean checkPlayerWon3(){
+            	int capitalcount=0;
 
 			if ( currentPlayer==((Country)currentPlayer.getCapital()).getOwner() ) {
-
-				for (int c=0; c< Players.size() ; c++) {
-
-					while ( ((Vector)currentPlayer.getTerritoriesOwned()).contains((Country)((Player)Players.elementAt(c)).getCapital()) ) {
+                               int size = Players.size();
+				for (int c=0; c< size ; c++) {
+                                   boolean size3 = ((Vector)currentPlayer.getTerritoriesOwned()).contains((Country)((Player)Players.elementAt(c)).getCapital());
+                                       
+					while ( size3 ) {
 						capitalcount++;
 						break;
 					}
@@ -1479,64 +1635,85 @@ transient - A keyword in the Java programming language that indicates that a fie
 			}
 
 			if ( capitalcount==Players.size() ) {
-				result=true;
+                       System.out.print("");
 			}
+            return false;
+                        
+        }
+        public boolean checkPlayerWon4(){
+            Mission m = currentPlayer.getMission();
+            Vector size2 = (Vector)currentPlayer.getPlayersEliminated();
+            Object size = m.getPlayer();
+          int size3 = (Player)size;
+            boolean size4 = (size2).contains( size );
+			while(
+					size !=null && // check is this is indeed a Elim Player card
+							size != currentPlayer && // check if its not the current player u need to eliminate
+							(size3 ==0 && // chack if that player has been eliminated
+							size4) //check if it was you who eliminated them
+					) {
+
+                // yay you have won
+              
+
+				break;
+			}
+			checkPlayerWon2();
+                        checkPlayerWon1();
+                        return false;
+        }
+        public boolean checkPlayerWon5(){
+            int won;
+            for (int c=0; c< Continents.length ; c++) {
+
+			if ( Continents[c].isOwned(currentPlayer) ) {
+				won++;
+			}
+
+		}
+		if (won == Continents.length ) {
+
+             
+                System.out.print("The Game Is Over, "+currentPlayer.getName()+" has won!\n");
+
+		}
+                return false;
+        }
+        
+        public boolean checkPlayerWon6(){
+                int size3 = ((Country)((Vector)currentPlayer.getTerritoriesOwned()).elementAt(c)).getArmies();
+            boolean n;
+            int size2;
+					while ( size3 >= size2)
+					{n++;
+						break;
+					}
+            
+
+				
+				
+            return false;
+        
+}
+	public boolean checkPlayerWon() {
+
+		boolean result=false;
+
+		// check if the player has won
+		
+		checkPlayerWon5();
+
+	// check if the player has won capital risk!
+		if (getSetupDone() && gameMode==MODE_CAPITAL && currentPlayer.getCapital() !=null ) {
+
+		checkPlayerWon3();
 
 		}
 		// check if the player has won mission risk!
 		else if (getSetupDone() && gameMode==MODE_SECRET_MISSION ) {
 
-			Mission m = currentPlayer.getMission();
-
-			while(
-					m.getPlayer() !=null && // check is this is indeed a Elim Player card
-					m.getPlayer() != currentPlayer && // check if its not the current player u need to eliminate
-					((Player)m.getPlayer()).getNoTerritoriesOwned()==0 && // chack if that player has been eliminated
-					((Vector)currentPlayer.getPlayersEliminated()).contains( m.getPlayer() ) //check if it was you who eliminated them
-			) {
-
-				// yay you have won
-				result=true;
-
-				break;
-			}
-			while (
-					m.getNoofcountries() != 0 && m.getNoofarmies() != 0 && // check if this card has a value for capture teretories
-					( m.getPlayer() == null || ((Player)m.getPlayer()).getNoTerritoriesOwned()==0 || (Player)m.getPlayer() == currentPlayer ) &&
-					m.getNoofcountries() <= currentPlayer.getNoTerritoriesOwned() // do you have that number of countries captured
-			) {
-
-				int n=0;
-
-				for (int c=0; c< currentPlayer.getNoTerritoriesOwned() ; c++) {
-					while ( ((Country)((Vector)currentPlayer.getTerritoriesOwned()).elementAt(c)).getArmies() >= m.getNoofarmies() )
-						{n++;
-						break;
-						}
-
-				}
-				if (n >= m.getNoofcountries() ) {
-
-					// yay you have won
-					result=true;
-
-				}
-				break;
-			}
-			while (
-					(m.getContinent1() !=null) && // this means its a continent mission
-
-					checkPlayerOwnesContinentForMission(m.getContinent1(),1) &&
-					checkPlayerOwnesContinentForMission(m.getContinent2(),2) &&
-					checkPlayerOwnesContinentForMission(m.getContinent3(),3)
-
-			) {
-
-				// yay you have won
-				result=true;
-				break;
-
-			}
+			checkPlayerWon4();
+			
 
 		}
 
@@ -1568,27 +1745,27 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 	}
 
-        public boolean canContinue() {
+	public boolean canContinue() {
 
 		if (gameState==STATE_GAME_OVER && gameMode != MODE_DOMINATION && gameMode != 1) {
 
 			int oldGameMode=gameMode;
 			gameMode=MODE_DOMINATION;
 			boolean playerWon = checkPlayerWon();
-                        gameMode=oldGameMode;
+			gameMode=oldGameMode;
 
-                        return !playerWon; // we CAN continue if someone has NOT won
+			return !playerWon; // we CAN continue if someone has NOT won
 
-                }
-                return false;
+		}
+		return false;
 
-        }
+	}
 
 	public boolean continuePlay() {
 
-                if (canContinue()) {
+		if (canContinue()) {
 
-                        gameMode=MODE_DOMINATION;
+			gameMode=MODE_DOMINATION;
 
 			if (tradeCap==true) { gameState=STATE_TRADE_CARDS; }
 			else if ( currentPlayer.getExtraArmies()==0 ) { gameState=STATE_ATTACKING; }
@@ -1600,83 +1777,57 @@ transient - A keyword in the Java programming language that indicates that a fie
 		return false;
 	}
 
-        public int getClosestCountry(int x, int y) {
+	public int getClosestCountry(int x, int y) {
 		Country closestCountryCanvas = null;
 		int closestDistance = Integer.MAX_VALUE;
 
 		for (int index=0; index < Countries.length; index++) {
-                        int distance = Countries[index].getDistanceTo(x,y);
-                        if (distance < closestDistance) {
-                                // we have a country closer to the point (x,y)
-                                closestCountryCanvas = Countries[index];
-                                closestDistance = distance;
-                        }
+			int distance = Countries[index].getDistanceTo(x,y);
+			if (distance < closestDistance) {
+				// we have a country closer to the point (x,y)
+				closestCountryCanvas = Countries[index];
+				closestDistance = distance;
+			}
 		}
 		return closestCountryCanvas.getColor();
-        }
+	}
 
 	/**
 	 * Loads the map
-	 * @param filename The map filename
 	 * @throws Exception There was a error
 	 */
 	public void loadMap() throws Exception {
 		loadMap(true, null);
-	}
+	} 
+        public void loadMap1(){
+            MapTranslator.setMap( mapfile );
 
-	public void loadMap(boolean cleanLoad, BufferedReader bufferin) throws Exception {
-
-                MapTranslator.setMap( mapfile );
-
-		StringTokenizer st=null;
+		
 
 		Vector Countries;
 		Vector Continents;
+            boolean cleanLoad = false;
 		if (cleanLoad) {
-                    Countries = new Vector();
-                    Continents = new Vector();
-                }
-                else {
-                    Countries = new Vector(Arrays.asList(this.Countries));
-                    Continents = new Vector(Arrays.asList(this.Continents));
+			Countries = new Vector();
+			Continents = new Vector();
 		}
-
-                int mapVer = 1;
-		//System.out.print("Starting Load Map...\n");
-		int countryCount = 0;
-		if (bufferin == null) {
-			bufferin=RiskUtil.readMap( RiskUtil.openMapStream(mapfile) );
+		else {
+			Countries = new Vector(Arrays.asList(this.Countries));
+			Continents = new Vector(Arrays.asList(this.Continents));
 		}
-
-		String input = bufferin.readLine();
-		String mode = "none";
-
-		while(input != null) {
-
-			if (input.equals("") || input.charAt(0)==';') {
-				// do nothing
-				//System.out.print("Nothing\n"); // testing
-			}
-			else {
-				//System.out.print("Something found\n"); // testing
-
-				if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
-					//System.out.print("Something beggining with [ and ending with ] found\n"); // testing
-					mode="newsection";
+        }
+         public void loadMap2(){
+            String input = null;
+             if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
+                 System.out.print("Something beggining with [ and ending with ] found\n"); // testing
+               
 				}
-				else { st = new StringTokenizer(input); }
-
-				if (mode.equals("files")) {
-					//System.out.print("Adding files\n"); // testing
-
-					if ( input.startsWith("pic ") )  { ImagePic = input.substring(4); } //System.out.print("file: ImagePic added!\n"); // testing
-					else if ( input.startsWith("map ") ) { ImageMap = input.substring(4); } //System.out.print("file: ImageMap added!\n"); // testing
-					else if ( input.startsWith("crd ") ) { }
-					else if ( input.startsWith("prv ") ) { }
-					else { throw new Exception("error with files section in map file: "+input); }
-
-				}
-				else if (mode.equals("continents")) {
+				else {
+                  System.out.print("");
+}
+         }
+         public void loadMap5(){
+             if (mode.equals("continents")) {
 					//System.out.print("Adding continents\n"); // testing
 
 					String id=st.nextToken(); //System.out.print(name+"\n"); // testing
@@ -1695,7 +1846,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 					}
 
-					while( st.hasMoreTokens() ) { throw new Exception("unknown item found in map file: "+ st.nextToken() ); }
+					while( st.hasMoreTokens() ) { System.out.println("unknown item found in map file: "+ st.nextToken() ); }
+                 boolean cleanLoad = false;
 
 					while(cleanLoad) {
 						Continent continent = new Continent(id, name, noa, color);
@@ -1704,7 +1856,16 @@ transient - A keyword in the Java programming language that indicates that a fie
 					}
 
 				}
-				else if (mode.equals("countries")) {
+         }
+         public void loadMap3(){
+             
+         
+            if(mode.equals("files")) {
+               
+					//System.out.print("Adding files\n"); // testing
+                      loadMap5();
+				
+				if (mode.equals("countries")) {
 					//System.out.print("Adding countries\n"); // testing
 
 					int color = Integer.parseInt(st.nextToken());
@@ -1717,10 +1878,13 @@ transient - A keyword in the Java programming language that indicates that a fie
 					int x = Integer.parseInt(st.nextToken());
 					int y = Integer.parseInt(st.nextToken());
 
-					while( st.hasMoreTokens() ) { throw new Exception("unknown item found in map file: "+ st.nextToken() ); }
-					while ( ++countryCount != color ) { throw new Exception("unexpected number found in map file: "+color ); }
+					while( st.hasMoreTokens() ) { System.out.println("unknown item found in map file: " );
+}
+                     int countryCount = 0;
+					while ( ++countryCount != color ) { System.out.println("unexpected number found in map file: "+color ); }
 
-					Country country;
+					Country country = null;
+                     boolean cleanLoad = false;
 					while (cleanLoad) {
 						country = new Country();
 						Countries.add(country);
@@ -1739,7 +1903,11 @@ transient - A keyword in the Java programming language that indicates that a fie
 					country.setX(x);
 					country.setY(y);
 				}
-				else if (mode.equals("borders")) {
+         }
+         }
+         public void loadMap4(){
+            String mode = null;
+             if (mode.equals("borders")) {
 					//System.out.print("Adding borders\n"); // testing
 
 					int country=Integer.parseInt( st.nextToken() ); //System.out.print(country+"\n"); // testing
@@ -1752,22 +1920,56 @@ transient - A keyword in the Java programming language that indicates that a fie
 				else if (mode.equals("newsection")) {
 
 					mode = input.substring(1, input.length()-1); // set mode to the name of the section
-
-					while (mode.equals("files") ) {
+                                        boolean size = mode.equals("files"); 
+					while (size) {
 						//System.out.print("Section: files found\n"); // testing
 						ImagePic=null;
 						ImageMap=null;
 						break;
 					}
-					while(!(mode.equals("files")){
-						throw new Exception("unknown section found in map file: "+mode);
+					while(!size) {
+						System.out.println("unknown section found in map file: "+mode);
 					}
 
 				}
-                                // we are not in any section
-                                else if (input.startsWith("ver ")) {
-                                        mapVer = Integer.parseInt(input.substring(4, input.length()));
-                                }
+         }
+	public void loadMap(boolean cleanLoad, BufferedReader bufferin) throws Exception {
+
+		MapTranslator.setMap( mapfile );
+
+	
+
+		Vector Countries = null;
+		Vector Continents = null;
+		loadMap1();
+
+		int mapVer = 1;
+		//System.out.print("Starting Load Map...\n");
+		
+		if (bufferin == null) {
+			bufferin=RiskUtil.readMap( RiskUtil.openMapStream(mapfile) );
+		}
+
+		String input = bufferin.readLine();
+		
+
+		while(input != null) {
+
+			if (input.equals("") || input.charAt(0)==';') {
+				// do nothing
+				System.out.print("Nothing\n"); // testing
+			}
+			else {
+				//System.out.print("Something found\n"); // testing
+                               loadMap2();
+				
+                               loadMap3();
+			       loadMap4();
+				
+				// we are not in any section
+				if (input.startsWith("ver ")) {
+					mapVer = Integer.parseInt(input.substring(4, input.length()));
+				}
 //				else if (input.equals("test")) {
 //
 //				}
@@ -1784,10 +1986,10 @@ transient - A keyword in the Java programming language that indicates that a fie
 		}
 		bufferin.close();
 
-                int gameVer = getVersion();
-                if (gameVer > mapVer) {
-                    throw new Exception(mapfile + " too old, ver " + mapVer + ". game saved with ver " + gameVer);
-                }
+		int gameVer = getVersion();
+		if (gameVer > mapVer) {
+			System.err.println(mapfile + " too old, ver " + mapVer + ". game saved with ver " + gameVer);
+		}
 
 		if (cleanLoad) {
 			this.Countries = (Country[])Countries.toArray( new Country[Countries.size()] );
@@ -1802,6 +2004,71 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return boolean Return trues if missions are supported
 	 * @throws Exception The file cannot be found
 	 */
+        public boolean setMapfile4(){
+            Object mode = null;
+            if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
+					mode="newsection";
+				}
+                                 setMapfile2();
+				
+                                if ("borders".equals(mode)) {
+
+               System.out.print("");
+
+				}
+				else if ("newsection".equals(mode)) {
+
+					mode = input.substring(1, input.length()-1); // set mode to the name of the section
+
+				}
+                                return false;
+        }
+        public boolean setMapfile3(){
+            	int space = input.indexOf(' ');
+                   boolean size = input.equals("test");
+					while(size) {
+
+						runmaptest = true;
+						break;
+
+					}
+					//else if (input.startsWith("name ")) {
+					//	mapName = input.substring(5,input.length());
+					//}
+					//else if (input.startsWith("ver ")) {
+					//        ver = Integer.parseInt( input.substring(4,input.length()) );
+					//}
+					while (space >= 0) {
+						String key = input.substring(0,space);
+						String value = input.substring(space+1);
+
+						properties.put(key, value);
+						break;
+					}
+                                        return false;
+        }
+        public boolean setMapfile2(){
+            Object mode = null;
+            if ("files".equals(mode)) {
+
+					if ( input.startsWith("pic ") ) { ImagePic = input.substring(4); }
+
+					else if ( input.startsWith("prv ") ) { previewPic = input.substring(4); }
+
+					else if ( input.startsWith("crd ") ) { 
+  System.out.print("");
+}
+
+				}
+            return false;
+        }
+        public boolean setMapfile1(){
+            boolean yesmap = false;
+            	if ( yesmap==false ) { System.err.println("error with map file"); }
+            boolean yescards = false;
+		if ( yescards==false ) {  System.err.println("cards file not specified in map file"); }
+            return false;
+        }
 	public boolean setMapfile(String f) throws Exception {
 
 		if (f.equals("default")) {
@@ -1831,72 +2098,30 @@ transient - A keyword in the Java programming language that indicates that a fie
 		String input = bufferin.readLine();
 		String mode = null;
 
-		boolean yesmap = false;
 		boolean returnvalue = false;
-		boolean yescards = false;
+		
 
 		while(input != null) {
-
 			if (input.equals("") || input.charAt(0)==';') {
+                            System.out.println("..");
 
 			}
 			else {
 
-				if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
-					mode="newsection";
-				}
+				setMapfile4();
+				if (mode == null) {
 
-				if ("files".equals(mode)) {
-
-					if ( input.startsWith("pic ") ) { ImagePic = input.substring(4); }
-
-					else if ( input.startsWith("prv ") ) { previewPic = input.substring(4); }
-
-					else if ( input.startsWith("crd ") ) { yescards=true; returnvalue = setCardsfile( input.substring(4) ); }
-
-				}
-				else if ("borders".equals(mode)) {
-
-					yesmap=true;
-
-				}
-				else if ("newsection".equals(mode)) {
-
-					mode = input.substring(1, input.length()-1); // set mode to the name of the section
-
-				}
-				else if (mode == null) {
-
-                                        int space = input.indexOf(' ');
-
-                                        while(input.equals("test")) {
-
-						runmaptest = true;
-						break;
-
-					}
-                                        //else if (input.startsWith("name ")) {
-					//	mapName = input.substring(5,input.length());
-					//}
-                                        //else if (input.startsWith("ver ")) {
-                                        //        ver = Integer.parseInt( input.substring(4,input.length()) );
-                                        //}
-                                        while (space >= 0) {
-                                            String key = input.substring(0,space);
-                                            String value = input.substring(space+1);
-
-                                            properties.put(key, value);
-                                            break;
-                                        }
-                                        // else unknown section
+				setMapfile3();
+					// else unknown section
 				}
 			}
 
 			input = bufferin.readLine(); // get next line
 		}
-
-		if ( yesmap==false ) { throw new Exception("error with map file"); }
-		if ( yescards==false ) { throw new Exception("cards file not specified in map file"); }
+                  setMapfile1();
+            
+        
+	
 
 		mapfile = f;
 		bufferin.close();
@@ -1904,9 +2129,9 @@ transient - A keyword in the Java programming language that indicates that a fie
 		return returnvalue;
 	}
 
-        /**
-         * we need to call this if we do not want to reload data from disk when we start a game
-         */
+	/**
+	 * we need to call this if we do not want to reload data from disk when we start a game
+	 */
 	public void setMemoryLoad() {
 
 		mapfile = null;
@@ -1922,13 +2147,13 @@ transient - A keyword in the Java programming language that indicates that a fie
 		Continents = new Continent[0];
 
 		Cards = new Vector();
-                usedCards = new Vector();
+		usedCards = new Vector();
 		Missions = new Vector();
 
-                properties = new HashMap();
+		properties = new HashMap();
 
-                runmaptest = false;
-                previewPic=null;
+		runmaptest = false;
+		previewPic=null;
 
 		setMemoryLoad();
 
@@ -1943,15 +2168,163 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 	/**
 	 * Loads the cards
-	 * @param filename The cards filename
 	 * @throws Exception There was a error
 	 */
+        public void loadCards9(){
+           
+					int s1 = Integer.parseInt(st.nextToken());
+					Player p = null;
+
+					loadCards3();
+
+					int noc = Integer.parseInt(st.nextToken());
+					int noa = Integer.parseInt(st.nextToken());
+
+					String s4 = st.nextToken();
+					String s5 = st.nextToken();
+					String s6 = st.nextToken();
+
+					String missioncode=s1+"-"+noc+"-"+noa+"-"+s4+"-"+s5+"-"+s6;
+            boolean rawLoad;
+					String description=rawLoad?null:MapTranslator.getTranslatedMissionName(missioncode);
+
+					while (description==null) {
+						description="";
+						while (st.hasMoreElements()) {
+							description = description +("".equals(description)?"":" ")+ st.nextToken();
+						}
+						break;
+					}
+
+					while (p!=null && !rawLoad) {
+
+				loadCards4();
+					}
+
+				loadCards7();
+        }
+        public void loadCards8(){
+            String mode;
+          
+            if (mode.equals("cards")) {
+					//System.out.print("Adding cards\n"); // testing
+                                       loadCards2();
+					 //System.out.print(name+"\n"); // testing
+
+				
+
+					loadCards5();
+
+				}
+        }
+         public void loadCards7(){
+            boolean rawLoad;
+            int s1;
+             	if ( rawLoad || s1 <= Players.size() ) {
+
+						//System.out.print(description+"\n"); // testing
+						Mission mission = new Mission(p, noc, noa, c1, c2, c3, description);
+						Missions.add(mission);
+					}
+					else {
+						System.out.print("NOT adding this mission as it refures to an unused player\n"); // testing
+					}
+                
+         }
+        public void loadCards6(){
+            String mode = input.substring(1, input.length()-1); // set mode to the name of the section
+            switch (mode) {
+            //System.out.print("Section: cards found\n"); // testing
+                case "cards":
+                    break;
+            //System.out.print("Section: missions found\n"); // testing
+                case "missions":
+                    break;
+                default:
+                    System.err.println("unknown section found in cards file: "+mode);
+                    break;
+            }
+        }
+        public void loadCards5(){
+                   if ( st.hasMoreTokens() ) { System.err.println("unknown item found in cards file: "+ st.nextToken() ); } 
+                }
+        public void loadCards4(){
+                  		String name = p.getName();
+
+						String color = "color."+ColorUtil.getStringForColor( p.getColor() );
+						java.util.ResourceBundle trans = TranslationBundle.getBundle();
+						try { // in Java 1.4 no if (trans.containsKey(color))
+							name = trans.getString(color)+" "+name;
+						}
+						catch (Exception ex) {
+                                                System.err.println("error");
+                                                }
+            String s1;
+
+						String oldkey ="PLAYER"+s1;
+						String newkey = "{"+oldkey+"}";
+            String description;                int size = description.indexOf(newkey);
+						while (size >= 0) {
+							// DefaultCards_XX.properties uses this format
+							description = RiskUtil.replaceAll(description, newkey, name );
+							break;
+						}
+                                                int size1 = description.indexOf(oldkey);
+						while (size1 >= 0) {
+							// many maps still have this format for missions
+							description = RiskUtil.replaceAll(description, oldkey, name );
+							break;
+						}
+                                              
+						while ((!(size1 >= 0))&& (!(size >= 0))){
+							System.err.println("newkey: "+newkey+" and oldkey: "+oldkey+" not found in mission: "+description);
+						}
+
+
+						break;  
+                }
+        public void loadCards3(){
+            int s1 = 0;
+            int size = Players.size();
+                    while (s1==0 || s1>size ) {
+               
+						break;
+					}
+					while (!(s1==0 || s1>size )) {
+						p = (Player)Players.elementAt( s1-1 );
+					}
+                }
+        public void loadCards2(){
+                    	if (name.equals(Card.WILDCARD)) {
+						Card card = new Card(name, null);
+						Cards.add(card);
+					}
+					else if ( name.equals(Card.CAVALRY) || name.equals(Card.INFANTRY) || name.equals(Card.CANNON) ) {
+						int country=Integer.parseInt( st.nextToken() );
+
+						//System.out.print( Countries[ country - 1 ].getName() +"\n"); // testing
+						Card card = new Card(name, Countries[ country - 1 ]);
+						Cards.add(card);
+					}
+					else {
+						System.err.println("unknown item found in cards file: "+name);
+					}
+                }
+        public void loadCards1(){
+            String input = null;
+                    if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
+                        System.out.print("Something beggining with [ and ending with ] found\n"); // testing
+                   
+				}
+				else {  System.out.print("");
+}
+                }
 	public void loadCards(boolean rawLoad) throws Exception {
 
-		StringTokenizer st=null;
+		
 
 		Cards = new Vector();
-                usedCards = new Vector();
+		usedCards = new Vector();
 		Missions = new Vector();
 
 		//System.out.print("Starting load cards and missions...\n");
@@ -1965,139 +2338,30 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 			if (input.equals("") || input.charAt(0)==';') {
 				// do nothing
-				//System.out.print("Nothing\n"); // testing
+				System.out.print("Nothing\n"); // testing
 			}
 			else {
 
 				//System.out.print("Something found\n"); // testing
 
-				if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
-					//System.out.print("Something beggining with [ and ending with ] found\n"); // testing
-					mode="newsection";
-				}
-				else { st = new StringTokenizer(input); }
+				loadCards1();
 
-				if (mode.equals("cards")) {
-					//System.out.print("Adding cards\n"); // testing
-
-					String name=st.nextToken(); //System.out.print(name+"\n"); // testing
-
-					if (name.equals(Card.WILDCARD)) {
-						Card card = new Card(name, null);
-						Cards.add(card);
-					}
-					else if ( name.equals(Card.CAVALRY) || name.equals(Card.INFANTRY) || name.equals(Card.CANNON) ) {
-						int country=Integer.parseInt( st.nextToken() );
-
-						//System.out.print( Countries[ country - 1 ].getName() +"\n"); // testing
-						Card card = new Card(name, Countries[ country - 1 ]);
-						Cards.add(card);
-					}
-					else {
-						throw new Exception("unknown item found in cards file: "+name);
-					}
-
-					if ( st.hasMoreTokens() ) { throw new Exception("unknown item found in cards file: "+ st.nextToken() ); }
-
-				}
-				else if (mode.equals("missions")) {
+				loadCards8();
+				 if (mode.equals("missions")) {
 					//System.out.print("Adding Mission\n"); // testing
 
 					//boolean add=true;
-
-					int s1 = Integer.parseInt(st.nextToken());
-					Player p;
-
-					while (s1==0 || s1>Players.size() ) {
-						p = null;
-						break;
-					}
-					while (!(s1==0 || s1>Players.size() )) {
-						p = (Player)Players.elementAt( s1-1 );
-					}
-
-					int noc = Integer.parseInt(st.nextToken());
-					int noa = Integer.parseInt(st.nextToken());
-
-					String s4 = st.nextToken();
-					String s5 = st.nextToken();
-					String s6 = st.nextToken();
-
-					Continent c1 = getMissionContinentfromString( s4 );
-					Continent c2 = getMissionContinentfromString( s5 );
-					Continent c3 = getMissionContinentfromString( s6 );
-
-					String missioncode=s1+"-"+noc+"-"+noa+"-"+s4+"-"+s5+"-"+s6;
-					String description=rawLoad?null:MapTranslator.getTranslatedMissionName(missioncode);
-
-					while (description==null) {
-					    description="";
-					    while (st.hasMoreElements()) {
-						description = description +("".equals(description)?"":" ")+ st.nextToken();
-					    }
-					    break;
-					}
-
-					while (p!=null && !rawLoad) {
-
-                                            String name = p.getName();
-
-                                            String color = "color."+ColorUtil.getStringForColor( p.getColor() );
-                                            java.util.ResourceBundle trans = TranslationBundle.getBundle();
-                                            try { // in Java 1.4 no if (trans.containsKey(color))
-                                                name = trans.getString(color)+" "+name;
-                                            }
-                                            catch (Exception ex) { }
-
-                                            String oldkey ="PLAYER"+s1;
-                                            String newkey = "{"+oldkey+"}";
-                                           while (description.indexOf(newkey) >= 0) {
-                                                // DefaultCards_XX.properties uses this format
-                                                description = RiskUtil.replaceAll(description, newkey, name );
-                                                break;
-                                            }
-                                            while (description.indexOf(oldkey) >= 0) {
-                                                // many maps still have this format for missions
-                                                description = RiskUtil.replaceAll(description, oldkey, name );
-                                                break;
-                                            }
-                                           while ((!(description.indexOf(oldkey) >= 0))&& (!(description.indexOf(newkey) >= 0))){
-                                                System.err.println("newkey: "+newkey+" and oldkey: "+oldkey+" not found in mission: "+description);
-                                            }
-
-                                        
-					break;
-					}
-
-					if ( rawLoad || s1 <= Players.size() ) {
-
-						//System.out.print(description+"\n"); // testing
-						Mission mission = new Mission(p, noc, noa, c1, c2, c3, description);
-						Missions.add(mission);
-					}
-					else {
-						//System.out.print("NOT adding this mission as it refures to an unused player\n"); // testing
-					}
+                                    loadCards9();
 
 				}
 				else if (mode.equals("newsection")) {
 
-					mode = input.substring(1, input.length()-1); // set mode to the name of the section
-
-					if (mode.equals("cards") ) {
-						//System.out.print("Section: cards found\n"); // testing
-					}
-					else if (mode.equals("missions") ) {
-						//System.out.print("Section: missions found\n"); // testing
-					}
-					else {
-						throw new Exception("unknown section found in cards file: "+mode);
-					}
+		               loadCards6();
 
 				}
 				else {
 
-					throw new Exception("unknown item found in cards file: "+input);
+					System.err.println("unknown item found in cards file: "+input);
 
 				}
 
@@ -2113,22 +2377,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 
 	}
 
-	private Continent getMissionContinentfromString(String a) {
-
-		if (a.equals("*")) {
-			return ANY_CONTINENT;
-		}
-		else {
-			int s = Integer.parseInt(a);
-			if (s==0) {
-				return null;
-			}
-			else {
-				return Continents[ s-1 ];
-			}
-
-		}
-	}
+	
 
 
 	/**
@@ -2137,10 +2386,39 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return boolean Return trues if missions are supported
 	 * @throws Exception The file cannot be found
 	 */
-	public boolean setCardsfile(String f) throws Exception {
+        private boolean setCardsfile2(){
+            String input;
+            String mode;
+            if (mode.equals("newsection")) {
+
+					mode = input.substring(1, input.length()-1); // set mode to the name of the section
+
+					if (mode.equals("cards")) {
+
+                                         System.out.print("");
+
+					}
+					else if (mode.equals("missions")) {
+
+                                            System.out.print("");
+
+					}
+				}
+            return false;
+        }
+        private boolean setCardsfile1(){
+            String input;
+            if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
+                System.out.print("");
+				}
+				else {  System.out.print("");
+}
+            return false;
+        }
+	private boolean setCardsfile(String f) throws Exception {
 
 
-		StringTokenizer st=null;
+		
 
 
 		if (f.equals("default")) {
@@ -2170,7 +2448,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 */
 
 		String input = bufferin.readLine();
-		String mode = "none";
+		
 
 		boolean yesmissions=false;
 		boolean yescards=false;
@@ -2178,32 +2456,15 @@ transient - A keyword in the Java programming language that indicates that a fie
 		while(input != null) {
 
 			if (input.equals("") || input.charAt(0)==';') {
-
+                      System.out.print("..");
 			}
 			else {
 
-				if (input.charAt(0)=='[' && input.charAt( input.length()-1 )==']') {
-					mode="newsection";
-				}
-				else { st = new StringTokenizer(input); }
+				setCardsfile1();
 
 
 
-				if (mode.equals("newsection")) {
-
-					mode = input.substring(1, input.length()-1); // set mode to the name of the section
-
-					if (mode.equals("cards")) {
-
-						yescards=true;
-
-					}
-					else if (mode.equals("missions")) {
-
-						yesmissions=true;
-
-					}
-				}
+				setCardsfile2();
 
 
 			}
@@ -2230,7 +2491,7 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 */
 	public List shuffleCountries() {
 
-                // we create a COPY of the Countries array, so that we do not mess up the real one
+		// we create a COPY of the Countries array, so that we do not mess up the real one
 		List oldCountries = new Vector( Arrays.asList( Countries ) );
 
 		//Vector newCountries = new Vector();
@@ -2250,9 +2511,9 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return RiskGame Returns the new game created
 
 	public static RiskGame newGame() {
-		RiskGame game = new RiskGame();
-		//System.out.print("Game State: "+game.getState()+"\n"); // testing
-		return game;
+	RiskGame game = new RiskGame();
+	//System.out.print("Game State: "+game.getState()+"\n"); // testing
+	return game;
 	}
 	 */
 
@@ -2264,18 +2525,18 @@ transient - A keyword in the Java programming language that indicates that a fie
 	public static RiskGame loadGame(String file) throws Exception {
 		RiskGame game = null;
 		//try {
-			InputStream filein = RiskUtil.getLoadFileInputStream(file);
-			ObjectInputStream objectin = new ObjectInputStream(filein);
-			game = (RiskGame) objectin.readObject();
-			objectin.close();
+		InputStream filein = RiskUtil.getLoadFileInputStream(file);
+		ObjectInputStream objectin = new ObjectInputStream(filein);
+		game = (RiskGame) objectin.readObject();
+		objectin.close();
 
-			//XMLDecoder d = new XMLDecoder( new BufferedInputStream( new FileInputStream(file)));
-			//game = (RiskGame)d.readObject();
-			//d.close();
+		//XMLDecoder d = new XMLDecoder( new BufferedInputStream( new FileInputStream(file)));
+		//game = (RiskGame)d.readObject();
+		//d.close();
 
 		//}
 		//catch (Exception e) {
-			//System.out.println(e.getMessage());
+		//System.out.println(e.getMessage());
 		//}
 		return game;
 	}
@@ -2287,10 +2548,10 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return Riskgame Returns the game, which is already set to null
 	 * /
 	public static RiskGame closeGame() {
-		RiskGame game = null;
-		return game;
+	RiskGame game = null;
+	return game;
 	}
-         */
+	 */
 
 	/**
 	 * Saves the current game to a file
@@ -2299,14 +2560,14 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 */
 	public void saveGame(OutputStream file) throws Exception { //added RiskGame parameter g, so remember to change in parser
 
-            ObjectOutputStream out = new RiskObjectOutputStream(file);
-            out.writeObject(this);
-            //out.flush(); not needed if we do a close
-            out.close();
+		ObjectOutputStream out = new RiskObjectOutputStream(file);
+		out.writeObject(this);
+		//out.flush(); not needed if we do a close
+		out.close();
 
-            //XMLEncoder e = new XMLEncoder( new BufferedOutputStream( new FileOutputStream(file)));
-            //e.writeObject(this);
-            //e.close();
+		//XMLEncoder e = new XMLEncoder( new BufferedOutputStream( new FileOutputStream(file)));
+		//e.writeObject(this);
+		//e.close();
 	}
 
 	/**
@@ -2390,8 +2651,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	 * @return Vector Return all the players
 	 */
 	public Vector getPlayersStats() {
-
-		for (int c=0; c< Players.size() ; c++) {
+            int size = Players.size() ;
+		for (int c=0; c< size; c++) {
 			workOutEndGoStats( (Player)Players.elementAt(c) );
 		}
 
@@ -2425,58 +2686,58 @@ transient - A keyword in the Java programming language that indicates that a fie
 	public String getPreviewPic() {
 		return previewPic;
 	}
-        public void setPreviewPic(String prv) {
-            previewPic = prv;
-        }
-
-        public Map getProperties() {
-            return properties;
-        }
-
-        int getIntProperty(String name, int defaultValue) {
-            Object value = properties.get(name);
-            if (value!=null) {
-                return Integer.parseInt( String.valueOf(value) );
-            }
-            return defaultValue;
-        }
-        void setIntProperty(String name, int value, int defaultValue) {
-            if (value == defaultValue) {
-                properties.remove(name);
-            }
-            else {
-                properties.put(name, String.valueOf(value));
-            }
-        }
-
-        public int getCircleSize() {
-            return getIntProperty("circle",20);
-        }
-        public void setCircleSize(int a) {
-            setIntProperty("circle",a,20);
-        }
-
-        public int getVersion() {
-            return getIntProperty("ver",1);
-        }
-        public void setVersion(int newVersion) {
-            setIntProperty("ver",newVersion,1);
-        }
-
-        /**
-         * can return the name or null
-         */
-	public String getMapName() {
-            return (String) properties.get("name");
+	public void setPreviewPic(String prv) {
+		previewPic = prv;
 	}
-        public void setMapName(String name) {
-            if (name==null) {
-                properties.remove("name");
-            }
-            else {
-                properties.put("name", name);
-            }
-        }
+
+	public Map getProperties() {
+		return properties;
+	}
+
+	int getIntProperty(String name, int defaultValue) {
+		Object value = properties.get(name);
+		if (value!=null) {
+			return Integer.parseInt( String.valueOf(value) );
+		}
+		return defaultValue;
+	}
+	void setIntProperty(String name, int value, int defaultValue) {
+		if (value == defaultValue) {
+			properties.remove(name);
+		}
+		else {
+			properties.put(name, String.valueOf(value));
+		}
+	}
+
+	public int getCircleSize() {
+		return getIntProperty("circle",20);
+	}
+	public void setCircleSize(int a) {
+		setIntProperty("circle",a,20);
+	}
+
+	public int getVersion() {
+		return getIntProperty("ver",1);
+	}
+	public void setVersion(int newVersion) {
+		setIntProperty("ver",newVersion,1);
+	}
+
+	/**
+	 * can return the name or null
+	 */
+	public String getMapName() {
+		return (String) properties.get("name");
+	}
+	public void setMapName(String name) {
+		if (name==null) {
+			properties.remove("name");
+		}
+		else {
+			properties.put("name", name);
+		}
+	}
 
 	/**
 	 * Gets the ImageMap
@@ -2497,8 +2758,8 @@ transient - A keyword in the Java programming language that indicates that a fie
 	public Vector getCards() {
 		return Cards;
 	}
-        public Vector getUsedCards() {
-            return usedCards;
+	public Vector getUsedCards() {
+		return usedCards;
 	}
 
 	/**
@@ -2569,15 +2830,15 @@ System.out.print(str+"]\n");
 
 	public Country getCountry(String name) {
 
-		for (int c=0; c< Countries.length ; c++) {
+	for (int c=0; c< Countries.length ; c++) {
 
-			if ( name.equals(Countries.[c].getName()) ) {
-				return Countries[c];
-			}
+	if ( name.equals(Countries.[c].getName()) ) {
+	return Countries[c];
+	}
 
-		}
-		System.out.println( "ERROR: Country not found: " + name );
-		return null;
+	}
+	System.out.println( "ERROR: Country not found: " + name );
+	return null;
 
 	}
 	 */
@@ -2592,15 +2853,15 @@ System.out.print(str+"]\n");
 
 	public Country getCountryByName(String name) {
 
-		for (int c=0; c< Countries.length ; c++) {
+	for (int c=0; c< Countries.length ; c++) {
 
-			if ( name.equals(Countries[c].getName()) ) {
-				return Countries[c];
-			}
+	if ( name.equals(Countries[c].getName()) ) {
+	return Countries[c];
+	}
 
-		}
-		System.out.println( "ERROR: Country not found: " + name );
-		return null;
+	}
+	System.out.println( "ERROR: Country not found: " + name );
+	return null;
 
 	}//public Country getCountryByName(String name)
 	 */
@@ -2622,41 +2883,62 @@ System.out.print(str+"]\n");
 	 * returns the country with the given color (ID)
 	 * the string is converted to an int value
 
-	public Country getCountryInt(String strId)
-	{
-		int nId = -1;
-		try {
-			nId = Integer.parseInt( strId);
-		} catch( NumberFormatException e) {
-			System.out.println( "ERROR: Can't convert number \"" + strId + "\" to a number." );
-			return null;
-		}
+	 public Country getCountryInt(String strId)
+	 {
+	 int nId = -1;
+	 try {
+	 nId = Integer.parseInt( strId);
+	 } catch( NumberFormatException e) {
+	 System.out.println( "ERROR: Can't convert number \"" + strId + "\" to a number." );
+	 return null;
+	 }
 
-		return getCountryInt(nId);
-	}//public Country getCountryInt(String nId)
+	 return getCountryInt(nId);
+	 }//public Country getCountryInt(String nId)
 	 */
 
 
 	/**
 	 * Gets a cards
-	 * @param name
 	 * @return Card Return the card you are looking for, if it exists. Otherwise returns null
 	 */
+        public Card[] getCards1(){
+            int a;
+            String name;
+            switch (a) {
+                case 0:
+            {
+                String name1;
+                name = name1;
+            }
+                    break;
+                case 1:
+            {
+                String name2;
+                name = name2;
+            }
+                    break;
+                default:
+            {
+                String name3;
+                name = name3;
+            }
+                    break;
+            }
+        }
 	public Card[] getCards(String name1,String name2,String name3) {
 
 		Card[] c = new Card[3];
 
 		Vector playersCards = new Vector( currentPlayer.getCards() );
 
-	   for (int a=0;a<3;a++) {
+		for (int a=0;a<3;a++) {
 
 			String name;
 
-			if (a==0) { name = name1; }
-			else if (a==1) { name = name2; }
-			else { name = name3; } // if (a==2)
-
-			for (int b=0; b< playersCards.size(); b++) {
+			getCards1(); // if (a==2)
+                          int size = playersCards.size();
+			for (int b=0; b< size; b++) {
 
 				if (name.equals(Card.WILDCARD) && name.equals( ((Card)playersCards.elementAt(b)).getName() ) ) {
 					c[a] = (Card) playersCards.remove(b);
@@ -2677,51 +2959,51 @@ System.out.print(str+"]\n");
 
 	public Card findCardAndRemoveIt(String name) {
 
-                int cardIndex = -1;
+		int cardIndex = -1;
+                int size = Cards.size() ; 
+		for (int c=0; c< size ; c++) {
+			Card theCard = ((Card)Cards.elementAt(c));
 
-		for (int c=0; c< Cards.size() ; c++) {
-                        Card theCard = ((Card)Cards.elementAt(c));
-
-                        // if we are looking for a wildcard, and this card is also a wildcard
-                        if (name.equals(Card.WILDCARD) && name.equals( theCard.getName() ) ) {
+			// if we are looking for a wildcard, and this card is also a wildcard
+			if (name.equals(Card.WILDCARD) && name.equals( theCard.getName() ) ) {
 				cardIndex = c;
-                                break;
+				break;
 			}
-                        // if we are not looking for a wildcard and the card matches the country
-                        else if (theCard.getCountry() != null && name.equals( String.valueOf( theCard.getCountry().getColor() ) ) ) {
+			// if we are not looking for a wildcard and the card matches the country
+			else if (theCard.getCountry() != null && name.equals( String.valueOf( theCard.getCountry().getColor() ) ) ) {
 				cardIndex = c;
-                                break;
+				break;
 			}
 
 		}
 
-                // find the card and remove it
-                Card theCard = (Card)Cards.remove(cardIndex);
-                Cards.trimToSize(); // not sure if this is needed
+		// find the card and remove it
+		Card theCard = (Card)Cards.remove(cardIndex);
+		Cards.trimToSize(); // not sure if this is needed
 
-                recycleUsedCards();
+		recycleUsedCards();
 
 		return theCard;
 
 	}
 
-        /**
-         * This method should be called after:
-         * <ul>
-         * <li>a card was removed from normal cards
-         * <li>a card was added to the used cards
-         * </ul>
-         */
-        private boolean recycleUsedCards() {
-            // if we have removed the last card, and we want to reuse our cards, then we add all the used ones into the current cards vector
-            Vector used = getUsedCards();
-            if (Cards.isEmpty() && recycleCards && !used.isEmpty()) {
-                Cards.addAll(used);
-                used.clear();
-                return true;
-            }
-            return false;
-        }
+	/**
+	 * This method should be called after:
+	 * <ul>
+	 * <li>a card was removed from normal cards
+	 * <li>a card was added to the used cards
+	 * </ul>
+	 */
+	private boolean recycleUsedCards() {
+		// if we have removed the last card, and we want to reuse our cards, then we add all the used ones into the current cards vector
+		Vector used = getUsedCards();
+		if (Cards.isEmpty() && recycleCards && !used.isEmpty()) {
+			Cards.addAll(used);
+			used.clear();
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Gets a cards
@@ -2827,7 +3109,7 @@ System.out.print(str+"]\n");
 	 * @return the current Card Mode
 	 */
 	public int getCardMode() {
-            return cardMode;
+		return cardMode;
 	}
 
 	public static int getRandomColor() {
@@ -2836,92 +3118,59 @@ System.out.print(str+"]\n");
 
 	}
 
-     /**
-      * copy and paste from
-      * @see java.awt.Color#HSBtoRGB(float, float, float)
-      */
-    public static int HSBtoRGB(float hue, float saturation, float brightness) {
-	int r = 0, g = 0, b = 0;
-    	if (saturation == 0) {
-	    r = g = b = (int) (brightness * 255.0f + 0.5f);
-	} else {
-	    float h = (hue - (float)Math.floor(hue)) * 6.0f;
-	    float f = h - (float)java.lang.Math.floor(h);
-	    float p = brightness * (1.0f - saturation);
-	    float q = brightness * (1.0f - saturation * f);
-	    float t = brightness * (1.0f - (saturation * (1.0f - f)));
-	    switch ((int) h) {
-	    case 0:
-		r = (int) (brightness * 255.0f + 0.5f);
-		g = (int) (t * 255.0f + 0.5f);
-		b = (int) (p * 255.0f + 0.5f);
-		break;
-	    case 1:
-		r = (int) (q * 255.0f + 0.5f);
-		g = (int) (brightness * 255.0f + 0.5f);
-		b = (int) (p * 255.0f + 0.5f);
-		break;
-	    case 2:
-		r = (int) (p * 255.0f + 0.5f);
-		g = (int) (brightness * 255.0f + 0.5f);
-		b = (int) (t * 255.0f + 0.5f);
-		break;
-	    case 3:
-		r = (int) (p * 255.0f + 0.5f);
-		g = (int) (q * 255.0f + 0.5f);
-		b = (int) (brightness * 255.0f + 0.5f);
-		break;
-	    case 4:
-		r = (int) (t * 255.0f + 0.5f);
-		g = (int) (p * 255.0f + 0.5f);
-		b = (int) (brightness * 255.0f + 0.5f);
-		break;
-	    case 5:
-		r = (int) (brightness * 255.0f + 0.5f);
-		g = (int) (p * 255.0f + 0.5f);
-		b = (int) (q * 255.0f + 0.5f);
-		break;
-	    }
+	/**
+	 * copy and paste from
+	 * @see java.awt.Color#HSBtoRGB(float, float, float)
+	 */
+	public static int HSBtoRGB(float hue, int saturation, float brightness) {
+		int r = 0, g = 0, b = 0;
+		if (saturation == 0) {
+			r = g = b = (int) (brightness * 255.0f + 0.5f);
+		} else {
+			
+			
+			System.out.print("");
+			
+		}
+		return 0xff000000 | (r << 16) | (g << 8) | (b << 0);
 	}
-	return 0xff000000 | (r << 16) | (g << 8) | (b << 0);
-    }
 
-    public int getNoAttackDice() {
-        if ( attacker.getArmies() > 4 ) { return 3; }
-        else { return attacker.getArmies()-1; }
-    }
-    public int getNoDefendDice() {
-        if ( defender.getArmies() > maxDefendDice ) { return maxDefendDice; }
-        else { return defender.getArmies(); }
-    }
+	public int getNoAttackDice() {
+		if ( attacker.getArmies() > 4 ) { return 3; }
+		else { return attacker.getArmies()-1; }
+	}
+	public int getNoDefendDice() {
+		if ( defender.getArmies() > maxDefendDice ) { return maxDefendDice; }
+		else { return defender.getArmies(); }
+	}
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-    	in.defaultReadObject();
-    	this.r = new Random();
-    	if (this.mapfile != null && gameState!=STATE_NEW_GAME) {
-            try {
-                    loadMap(false, null);
-            }
-            catch (Exception e1) {
-        	// stupid fix for android 1.6
-        	IOException ex = new IOException(e1.toString());
-        	ex.initCause(e1);
-                throw ex;
-            }
-    	}
-    }
+	public void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+		in.defaultReadObject();
+		this.r = new Random();
+		if (this.mapfile != null && gameState!=STATE_NEW_GAME) {
+			try {
+				loadMap(false, null);
+			}
+			catch (Exception e1) {
+                             
+				// stupid fix for android 1.6
+				System.err.println("Avoid sensitive informat");
+				
+			}
+		}
+	}
 
-    void setCardMode(int cardMode) {
+	void setCardMode(int cardMode) {
 		this.cardMode = cardMode;
 	}
 
-    public Player getPlayer(String name) {
-        for (Player player: (List<Player>)Players) {
-            if (player.getName().equals(name)) {
-                return player;
-            }
-        }
-        return null;
-    }
+	public Player getPlayer(String name) {
+		for (Player player: (List<Player>)Players) {
+			if (player.getName().equals(name)) {
+				return player;
+			}
+		}
+		return null;
+	}
 
 }
