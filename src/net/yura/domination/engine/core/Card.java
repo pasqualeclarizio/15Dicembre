@@ -52,7 +52,7 @@ public class Card implements Serializable {
         return name;
     }
 
-    public void setName(String n) {
+    private void setName(String n) {
 
 	if ( !n.equals(CAVALRY) && !n.equals(INFANTRY) && !n.equals(CANNON) && !n.equals(WILDCARD) ) {
 
@@ -72,7 +72,7 @@ public class Card implements Serializable {
         return country;
     }
 
-    public void setCountry(Country a) {
+   private void setCountry(Country a) {
         country = a;
     }
 

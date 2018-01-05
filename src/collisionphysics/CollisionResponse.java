@@ -40,7 +40,7 @@ public class CollisionResponse {
    }
    
    /** Reset the detected collision time to infinity. */
-   public void reset() {
+   private void reset() {
       this.t = Float.MAX_VALUE;
    }
    

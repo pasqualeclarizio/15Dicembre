@@ -83,7 +83,7 @@ public class AICapital extends AIDomination {
 
             mapPlayerChoose();
 
-            boolean off = probMethod();
+           
             //offensive planning
 
             //defensive planning
@@ -147,13 +147,11 @@ public class AICapital extends AIDomination {
             }
             owned.put(c.getOwner(), count);
         }
-        double num = gameState.capitals.size();
+        
         Integer myowned = owned.get(player);
         if (myowned == null) {
             myowned = 0;
         }
-        double percentOwned = myowned.intValue()/num;
-        double ratio = gameState.me.playerValue/gameState.orderedPlayers.get(0).playerValue;
     }
 
     /**
@@ -209,7 +207,9 @@ public class AICapital extends AIDomination {
                                    boolean AOn1, Set<Country> ATk1, 
                                    boolean lP1, boolean sCk1)
     {
-        int remaining = player.getExtraArmies();
+        
+        
+        
         List<AttackTarget> toAttack = new ArrayList<AttackTarget>();
         for (Iterator<Country> i = Sg1.capitals.iterator(); i.hasNext();) {
             targetAttack();
@@ -237,7 +237,7 @@ public class AICapital extends AIDomination {
                 return null;
             }
         continue;
-        boolean met = remaingIs();
+    
     }
 
     /**

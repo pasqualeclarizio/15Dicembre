@@ -1042,12 +1042,12 @@ public class AIDomination extends AISubmissive {
         Continent[] c = game.getContinents();
         int targetContinents = Math.max(1, c.length - gameState.orderedPlayers.size());
         //step 1 examine continents
-        List<Double> vals = new ArrayList<Double>();
+       
         List<EliminationTarget> result = new ArrayList<EliminationTarget>();
-        HashSet<Country> seen = new HashSet<Country>();
+        
         int leng = c.length;
         for (int i = 0; i < leng; i++) {
-            Continent co = c[i];
+
             if (gameState.owned[i] != null && (gameState.owned[i] == player || (gameState.commonThreat != null && gameState.commonThreat.p != gameState.owned[i]))) {
                 continue;
             }
@@ -1222,18 +1222,18 @@ public class AIDomination extends AISubmissive {
     }
 
     protected String fortify(GameState gs, List<Country> attackable, boolean minimal, List<Country> borders) {
-        int min = Math.max(game.getMaxDefendDice(), getMinPlacement());
+        
         //at least put 2, which increases defensive odds
         int size = borders.size();
         for (int i = 0; i < size; i++) {
-            String borders1 = country_borders1();
+                System.out.println("error");
         }
         if (minimal && (!game.getSetupDone() || (isIncreasingSet() && player.getCards().size() > 1))) {
             return null;
         }
         int size2 = borders.size();
         for (int i = 0; i < size2; i++) {
-            String borders2= country_borders2();
+                System.out.println("error");
         }
         return null;
     }
@@ -1267,7 +1267,7 @@ public class AIDomination extends AISubmissive {
 
     protected int additionalTroopsNeeded(Country c, GameState gs) {
         int needed = 0;
-        boolean minimal = !gs.capitals.contains(c);
+        
         List<Country> v = c.getIncomingNeighbours();
         int size = v.size();
         for (int j = 0; j < size; j++) {
@@ -1410,7 +1410,7 @@ public class AIDomination extends AISubmissive {
             PlayerState ps = null;
             ps = createPS(gameState,tp);
             //find the best territory to attack
-            List<Country> t = c.getTerritoriesContained();
+            
             int best = Integer.MAX_VALUE;
             AttackTarget selection = null;
             int bestRoute = 0;
@@ -1656,7 +1656,7 @@ public class AIDomination extends AISubmissive {
             int sum = rout + remaining;
             while(targ && rout < pathRemaining && sum >= 1) {
                 pathRemaining = next.routeRemaining[0];
-                AttackTarget newTarget = next;
+               
                 break;
             }
         }
@@ -1816,8 +1816,8 @@ public class AIDomination extends AISubmissive {
         }
 
         boolean isTarget = gameState.targetPlayers.size() > 1 && gameState.targetPlayers.get(0) == player2;
-        double divisor = 1;
-        int cardCount = player2.getCards().size();
+       
+        
         if_target1();
         if_target2();
 
@@ -2165,7 +2165,7 @@ public class AIDomination extends AISubmissive {
             return "move " + game.getMustMove();
         }
         int needed = -game.getAttacker().getArmies();
-        List<Country> border = getBorder(gameState);
+        
 
         boolean specialCase = false;
         if (!isIncreasingSet() && !eliminating && type != PLAYER_AI_EASY) {
@@ -2212,26 +2212,15 @@ public class AIDomination extends AISubmissive {
         }
     }
 
-    private int if_attack_target() {
-
-        if (game.getMaxDefendDice() == 2) {
-            forwardMin -= (total *= 1.3);
-        } else {
-            forwardMin -= total;
-        }
-        if (type == PLAYER_AI_HARD && !isIncreasingSet() && isBorder && isTooWeak(gameState)) {
-            //TODO: let the hard player lookahead further, alternatively just call to plan(true) and mark if we are doing an elimination or something
-            return Integer.MAX_VALUE;
-        }
-    }
+  
 
     private int getMinRemaining(HashMap<Country, AttackTarget> targets, int forwardMin, boolean isBorder, GameState gameState) {
-        int total = 0;
+       
         for (Iterator<AttackTarget> i = targets.values().iterator(); i.hasNext();) {
             attack_target();
         }
         
-        int if_attack =if_attack_target();
+       
 
         return Math.max(isBorder?game.getMaxDefendDice():0, forwardMin);
     }
@@ -2272,8 +2261,8 @@ public class AIDomination extends AISubmissive {
          if (index == -1 && c.getContinent().getOwner() == player) {
              break;
          }
-         int indexOther = targetContinents.indexOf(n.getContinent());
-        String other_if = other_if();
+        
+           System.out.println("");
         
     }
     
@@ -2325,7 +2314,7 @@ public class AIDomination extends AISubmissive {
             continue;
         }
         filtered.add(c);
-        int score = scoreCountry(c);
+        
         int size = c.getNeighbours().size();
         for (int j = 0; j < size; j++) {
         	get_neighbours();
@@ -2383,15 +2372,14 @@ public class AIDomination extends AISubmissive {
    
     public String getTacMove() {
         List<Country> t = player.getTerritoriesOwned();
-        Country sender = null;
-        Country receiver = null;
-        int lowestScore = Integer.MAX_VALUE;
-        GameState gs = getGameState(player, false);
+       
+       
+        
         //fortify the border
-        List<Country> v = getBorder(gs);
+        
         List<Country> filtered = new ArrayList<Country>();
 
-        List<Continent> targetContinents = null;
+    
         int size = t.size();
         for (int i = 0; i < size; i++) {
         	move_battle();
@@ -2404,7 +2392,7 @@ public class AIDomination extends AISubmissive {
         }
         //move from the interior (not very smart)
         if (max != null && max.getArmies() > getMinPlacement() + 1) {
-        	String move_interior=move_interior();
+        	    System.out.println("");
         }
         return "nomove";
     }
@@ -2438,9 +2426,9 @@ public class AIDomination extends AISubmissive {
     
     public void check_spot() {
     	if (type != AIDomination.PLAYER_AI_EASY && (game.getBattleRounds()%3 == 2 || (game.getBattleRounds() > 0 && (n - Math.min(m, game.getMaxDefendDice()) <= 0)))) {
-            String result = plan(true);
+               System.out.println("");
             //TODO: rewrite to not use string parsing
-            String rewrite = rewrite();
+            
         }
     }
     
@@ -2526,8 +2514,8 @@ public class AIDomination extends AISubmissive {
          if (reenforcements > 8 && strategic) {
              reenforcements *= 1.3;
          }
-         int attack = attackable + reenforcements;
-         HashSet<Continent> owned = new HashSet<Continent>();
+       
+        
          //update the attack and player value for the continents owned
         int leng = g.owned.length;
          for (int j = 0; j < leng; j++) {
@@ -2542,12 +2530,12 @@ public class AIDomination extends AISubmissive {
             continue;
         }
         //estimate the trade-in
-        int cards = player2.getCards().size() + 1;
-        int cardEstimate = (i==0&&excludeCards)?0:getCardEstimate(cards);
+       
+        
         PlayerState ps = new PlayerState();
-        List<Country> t = player2.getTerritoriesOwned();
+        
         int noArmies = 0;
-        int attackable = 0;
+        
         boolean strategic = isStrategic(player2);
         if (strategic) {
             strategicCount++;
@@ -2610,8 +2598,8 @@ public class AIDomination extends AISubmissive {
     public void game_alliance_treaties() {
 
         //base top player multiplier
-        double multiplier = game.getCards().isEmpty()?(game.isRecycleCards()?1.2:1.1):(player.getMission()!=null||player.getCapital()!=null)?1.1:1.3;
-        PlayerState topPlayer = g.orderedPlayers.get(0);
+        
+        
        top_player_multiplier();
        
         //look to see if you and the next highest player are at the multiplier below the highest
@@ -2634,14 +2622,14 @@ public class AIDomination extends AISubmissive {
         for (int i = 0; i < len; i++) {
             g.owned[i] = c[i].getOwner();
         }
-        int index = -1;
+     
         int playerCount = 1;
         //find the set of capitals
         set_capitals();
         
         g.orderedPlayers = new ArrayList<PlayerState>(playerCount);
-        int attackOrder = 0;
-        int strategicCount = 0;
+        
+      
         int size = players.size();
         for (int i = 0; i < size; i++) {
         	get_players();
@@ -2761,7 +2749,7 @@ public class AIDomination extends AISubmissive {
             }
             //swap for a single owned country - TODO: be smarter about which territory to retain
             if (ownsCount != 1 && player.getCards().size() > 3) {
-                List<Card> toTrade = Arrays.asList(result);
+              
                 s = killThisAnotherFor(result,ownsCount);
             }
         }

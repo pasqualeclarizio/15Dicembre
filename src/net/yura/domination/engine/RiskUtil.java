@@ -401,7 +401,7 @@ public class RiskUtil {
         }
         if(input.charAt(0)!='[' || input.charAt( input.length()-1 )!=']') {
         } else {
-            String mode = "newsection";
+          System.out.println("");
         }
         Object mode = null;
 
@@ -514,12 +514,12 @@ public class RiskUtil {
 
                 RiskUtil1();
                 bufferin= RiskUtil.readMap(RiskUtil.openMapStream(fileName));
-                Vector misss=null;
+               
 
 
 
                 String input = bufferin.readLine();
-                String mode = null;
+                
 
                 while(input != null) {
 

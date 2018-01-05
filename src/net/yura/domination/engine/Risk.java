@@ -665,7 +665,7 @@ public class Risk extends Thread {
         Player p = null;
         int value = patc.getType();
         while (value  == Player.PLAYER_HUMAN ) {
-            String out = output + patc.getName()+" ";
+           
             p = inGameParser5(patc,c);
             inGameParser3(patc);
             break;
@@ -722,7 +722,7 @@ public class Risk extends Thread {
         }
         for (int c=0; c< defSize ; c++) {
             def[c] = RiskGame.getNumber(StringT.nextToken());
-            String out = output + " " + (def[c]+1);
+            
         }
     }
     private String inGameParser12(int n,String output) {
@@ -1125,8 +1125,8 @@ public class Risk extends Thread {
             int newgame_type = -1;
             int newgame_cardType = -1;
             boolean newgame_autoplaceall = false;
-            boolean newgame_recycle = false;
-            boolean threeDice = false;
+            
+          
             String crap = null;
             inGameParser39(crap,newgame_type,newgame_cardType,n,Addr,newgame_autoplaceall);
         }
@@ -1141,7 +1141,7 @@ public class Risk extends Thread {
             try {
                 URL url;
                 url = (new File(filename)).toURI().toURL();
-                BufferedReader bufferin=new BufferedReader(new InputStreamReader(url.openStream()));
+                
                 replay = true;
                 output="playing \""+filename+"\"";
             }
@@ -1320,7 +1320,7 @@ public class Risk extends Thread {
         if (input.equals("autoendgo")) {
             inGameParser50(StringT);
             if (StringT.countTokens() == 1) {
-                String option = StringT.nextToken();
+               
             }
             else { output=RiskUtil.replaceAll(resb.getString( "core.error.syntax"), "{0}", "autoendgo on/off"); }
         }
@@ -1680,7 +1680,7 @@ public class Risk extends Thread {
      */
     protected void inGameParser(final String message) {
         controller.sendDebug(message);
-        boolean needInput=true;
+       
         String output=null;
         StringTokenizer StringT = new StringTokenizer( message );
         final String Addr = StringT.nextToken();
@@ -2195,7 +2195,7 @@ public class Risk extends Thread {
 
         // get all the players and make all with the ip of the leaver become nutral
         List players = game.getPlayers();
-        Player leaver=null,newNamePlayer=null;
+        
         int size = players.size();
         for (int c=0; c< size; c++) {
             Player player = (Player)players.get(c);

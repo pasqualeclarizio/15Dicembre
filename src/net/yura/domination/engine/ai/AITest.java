@@ -48,7 +48,7 @@ public class AITest extends AISubmissive {
 		}
 		else {
 		    Vector t = player.getTerritoriesOwned();
-		    Vector n;
+		  
 		    String name=null;
 			name = findAttackableTerritory(player);
 			if ( name == null ) {
